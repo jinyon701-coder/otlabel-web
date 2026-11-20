@@ -17,6 +17,7 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from google.oauth2.service_account import Credentials
 import gspread
+from gspread.exceptions import SpreadsheetNotFound
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 # 로깅 설정
@@ -72,7 +73,7 @@ def determine_brand(url: str, title: str = "") -> str:
 
 
 def connect_google_sheet():
-    """환경변수 기반 구글 스프레드시트 첫 번째 시트 연결"""
+    """환경변수 기반 구글 스프레드시트 연결 (없을 경우 자동 생성 및 공유)"""
     creds_raw = os.environ.get("GOOGLE_CREDENTIALS_JSON")
     sheet_id = os.environ.get("SHEET_ID", "").strip() or "1TohouE0HOPXrsH-k5A55Twv3lqsc7bHIH7m74SWRJZ8"
 
@@ -102,9 +103,38 @@ def connect_google_sheet():
         credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
         logger.info(f"인증 시도 서비스 계정: {creds_dict.get('client_email')} | 대상 SHEET_ID: {sheet_id}")
         client = gspread.authorize(credentials)
-        spreadsheet = client.open_by_key(sheet_id)
+
+        spreadsheet = None
+
+        # 1. 기존 open_by_key(sheet_id) 시도
+        try:
+            spreadsheet = client.open_by_key(sheet_id)
+            logger.info(f"open_by_key 성공: '{spreadsheet.title}'")
+        except SpreadsheetNotFound:
+            logger.warning(f"시트 ID({sheet_id})를 찾을 수 없습니다. 'otlabel_auto_db' 검색 시도...")
+            # client.open("otlabel_auto_db") 시도
+            try:
+                spreadsheet = client.open("otlabel_auto_db")
+                logger.info("기존 'otlabel_auto_db' 스프레드시트 열기 성공!")
+            except SpreadsheetNotFound:
+                logger.warning("'otlabel_auto_db' 스프레드시트가 없습니다. 새로 생성합니다.")
+                # 2. 새 스프레드시트 생성, 헤더 추가 및 이메일 공유
+                spreadsheet = client.create("otlabel_auto_db")
+                first_sheet = spreadsheet.get_worksheet(0)
+                first_sheet.insert_row(["brand", "name", "price", "fabric", "link", "isSponsored"], 1)
+                logger.info("'otlabel_auto_db' 생성 및 1행 헤더 추가 완료")
+
+                try:
+                    spreadsheet.share("kimjy89701@gmail.com", perm_type="user", role="writer")
+                    logger.info("kimjy89701@gmail.com 계정에 편집자(writer) 권한 공유 완료!")
+                except Exception as share_err:
+                    logger.warning(f"스프레드시트 공유 중 오류 (계속 진행): {share_err}")
+
+        # 3. 연결되거나 새로 생성된 스프레드시트의 전체 URL 출력
+        logger.info(f"★ 구글 스프레드시트 전체 URL: {spreadsheet.url}")
+
         worksheet = spreadsheet.get_worksheet(0)
-        logger.info(f"구글 스프레드시트 연결 성공: '{spreadsheet.title}' (시트: {worksheet.title})")
+        logger.info(f"작업 대상 워크시트: '{worksheet.title}'")
         return worksheet
     except Exception as e:
         logger.error(f"구글 스프레드시트 연결 실패: {type(e).__name__} - {e}")
