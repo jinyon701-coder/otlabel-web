@@ -80,6 +80,9 @@ def connect_google_sheet():
         logger.error("필수 환경변수(GOOGLE_CREDENTIALS_JSON, SHEET_ID)가 설정되지 않았습니다.")
         return None
 
+    creds_raw = creds_raw.strip()
+    sheet_id = sheet_id.strip()
+
     try:
         # JSON 문자열 또는 파일 경로 지원
         if os.path.exists(creds_raw):
@@ -93,13 +96,14 @@ def connect_google_sheet():
             "https://www.googleapis.com/auth/drive"
         ]
         credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+        logger.info(f"인증 시도 서비스 계정: {creds_dict.get('client_email')} | 대상 SHEET_ID: {sheet_id}")
         client = gspread.authorize(credentials)
         spreadsheet = client.open_by_key(sheet_id)
         worksheet = spreadsheet.get_worksheet(0)
         logger.info(f"구글 스프레드시트 연결 성공: '{spreadsheet.title}' (시트: {worksheet.title})")
         return worksheet
     except Exception as e:
-        logger.error(f"구글 스프레드시트 연결 실패: {e}")
+        logger.error(f"구글 스프레드시트 연결 실패: {type(e).__name__} - {e}")
         return None
 
 
@@ -211,13 +215,15 @@ def parse_product_page(page, url: str) -> Optional[Dict[str, any]]:
         if percent_matches:
             fabric = ", ".join([p.strip() for p in percent_matches[:5]])
 
-    # 정제
-    if not name:
-        name = f"{brand} 추천 의류"
-    if not fabric:
-        fabric = "면 100% (상세 라벨 확인 권장)"
+    invalid_keywords = ["blocked", "bad request", "server error", "찾을 수 없음", "추천 의류"]
+    if not name or any(k in name.lower() for k in invalid_keywords) or price <= 0:
+        logger.warning(f"  ✕ 유효하지 않은 페이지/차단으로 스킵: [{brand}] {name} ({price}원)")
+        return None
 
-    logger.info(f"  ✓ 추출 결과: [{brand}] {name} | {price:,}원 | {fabric[:40]}...")
+    if not fabric:
+        fabric = "상세 라벨 확인 권장"
+
+    logger.info(f"  ✓ 추출 성공: [{brand}] {name} | {price:,}원 | {fabric[:40]}...")
 
     return {
         "brand": brand,
