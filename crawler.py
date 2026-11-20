@@ -74,14 +74,13 @@ def determine_brand(url: str, title: str = "") -> str:
 def connect_google_sheet():
     """환경변수 기반 구글 스프레드시트 첫 번째 시트 연결"""
     creds_raw = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-    sheet_id = os.environ.get("SHEET_ID")
+    sheet_id = os.environ.get("SHEET_ID", "").strip() or "1TohouE0HOPXrsH-k5A55Twv3lqsc7bHIH7m74SWRJZ8"
 
-    if not creds_raw or not sheet_id:
-        logger.error("필수 환경변수(GOOGLE_CREDENTIALS_JSON, SHEET_ID)가 설정되지 않았습니다.")
+    if not creds_raw:
+        logger.error("필수 환경변수(GOOGLE_CREDENTIALS_JSON)가 설정되지 않았습니다.")
         return None
 
     creds_raw = creds_raw.strip()
-    sheet_id = sheet_id.strip()
 
     if "/d/" in sheet_id:
         match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_id)
