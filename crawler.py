@@ -83,6 +83,11 @@ def connect_google_sheet():
     creds_raw = creds_raw.strip()
     sheet_id = sheet_id.strip()
 
+    if "/d/" in sheet_id:
+        match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_id)
+        if match:
+            sheet_id = match.group(1)
+
     try:
         # JSON 문자열 또는 파일 경로 지원
         if os.path.exists(creds_raw):
