@@ -284,17 +284,74 @@
       </p>
 
       <!-- 2단계 법률 검토 및 고지사항 슬롯 (Legal Disclaimer Slot) -->
-      <div id="legal-disclaimer-slot" class="p-3 bg-white/90 rounded-xl border border-gray-200 text-[10px] text-gray-500 space-y-1.5">
-        <div class="flex items-center justify-between font-bold text-gray-700">
-          <span class="flex items-center gap-1">
-            <i class="fa-solid fa-shield-halved text-indigo-500 text-[10px]"></i>
-            <span>의류 정보 공시 및 법적 면책 고지</span>
-          </span>
-          <span class="text-[9px] text-gray-400">표시·광고의 공정화에 관한 법률 준수</span>
+      <div id="legal-disclaimer-slot" class="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-2xs">
+        <!-- 상단 헤더 -->
+        <div class="px-3.5 py-2.5 bg-gray-50/90 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex items-center gap-1.5 font-bold text-gray-800 text-[11px]">
+            <i class="fa-solid fa-shield-halved text-indigo-600 text-xs"></i>
+            <span>의류 정보 공시 및 법적 고지사항</span>
+          </div>
+          <span class="text-[9px] font-semibold text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">대한민국 법령 준수</span>
         </div>
-        <p class="leading-normal text-gray-500">
-          본 서비스의 섬유 퀄리티 점수와 가성비 지수는 각 SPA 브랜드가 공시한 의류 케어라벨 공식 표기치(혼용률)를 자체 공학적 가중치 알고리즘으로 분석한 참고 정보입니다. 각 브랜드 명칭 및 제품 상표권은 해당 권리자에게 귀속됩니다.
-        </p>
+
+        <!-- 3대 핵심 고지 아코디언 리스트 -->
+        <div class="divide-y divide-gray-100 text-[10px]">
+          <!-- 1. 정보 제공 목적 및 최신성 확인 권장 -->
+          <details class="group p-3 transition-colors hover:bg-gray-50/60" open>
+            <summary class="flex items-center justify-between font-bold text-gray-700 cursor-pointer list-none select-none">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-clipboard-check text-indigo-500 text-[10px]"></i>
+                <span>1. 공식 표기 정보 제공 목적 &amp; 최신 정보 확인 권장</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-indigo-200">
+              옷라벨(Otlabel)의 섬유 점수 및 가성비 지표는 각 브랜드 공식 온라인몰에 공시된 케어라벨 표기 혼용률을 기반으로 자체 공학적 가중치 알고리즘을 적용하여 산출한 단순 참고 지표입니다. 직조 방식, 원사 등급, 제조 차수(Lot), 리뉴얼 등에 따라 실제 착용감이 상이할 수 있으므로, 최종 구매 전 반드시 제조사/공식몰의 최신 상품 상세페이지를 확인하시기 바랍니다. 본 서비스는 「표시·광고의 공정화에 관한 법률」을 준수하며 부당비교광고를 하지 않습니다.
+            </p>
+          </details>
+
+          <!-- 2. 통신판매중개 및 정보제공자 면책 고지 -->
+          <details class="group p-3 transition-colors hover:bg-gray-50/60">
+            <summary class="flex items-center justify-between font-bold text-gray-700 cursor-pointer list-none select-none">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-scale-balanced text-indigo-500 text-[10px]"></i>
+                <span>2. 통신판매중개자 및 전자상거래 면책 고지</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-indigo-200">
+              옷라벨은 통신판매의 직접 당사자가 아닌 전자상거래 정보 제공 및 통신판매중개자입니다. 본 플랫폼 내 링크를 통해 연결되는 각 브랜드 공식몰 및 제휴 판매처에서 이루어지는 상품 주문, 결제, 배송, 취소·환불 및 CS 관련 모든 책임은 해당 통신판매업자(각 쇼핑몰)에게 있습니다.
+            </p>
+          </details>
+
+          <!-- 3. 추천·보증 및 제휴 마케팅 수수료 고지 -->
+          <details class="group p-3 transition-colors hover:bg-gray-50/60">
+            <summary class="flex items-center justify-between font-bold text-gray-700 cursor-pointer list-none select-none">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-bullhorn text-amber-500 text-[10px]"></i>
+                <span>3. 추천·제휴 광고 및 경제적 대가 고지</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-amber-300">
+              공정거래위원회 「추천·보증 등에 관한 표시·광고 심사지침」에 따라, 서비스 내 '추천·제휴광고' 표기 상품 또는 일부 링크(쿠팡 파트너스, 무신사 어필리에이트 등)를 통해 구매가 이루어질 경우 플랫폼 운영을 위한 소정의 수수료를 지급받을 수 있습니다. 제휴 여부는 소재 분석 점수 산출 알고리즘 및 팩트 지표 산정에 일체 영향을 미치지 않습니다.
+            </p>
+          </details>
+
+          <!-- 4. 상표권 및 지식재산권 보호 고지 -->
+          <details class="group p-3 transition-colors hover:bg-gray-50/60">
+            <summary class="flex items-center justify-between font-bold text-gray-700 cursor-pointer list-none select-none">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-trademark text-gray-400 text-[10px]"></i>
+                <span>4. 상표권 및 지식재산권 보호</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-gray-300">
+              서비스에 표시된 각 패션 브랜드의 상표, 상호, 로고 및 상품명에 관한 모든 권리는 해당 권리자에게 있습니다. 본 서비스는 상표법 및 부정경쟁방지법에 의거하여 소비자의 상품 식별 및 객관적 비교 편의를 돕기 위한 설명적 목적으로만 정당하게 인용하고 있습니다.
+            </p>
+          </details>
+        </div>
       </div>
 
       <div class="pt-2 border-t border-gray-200/80 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-gray-400">
@@ -331,9 +388,9 @@
         <div>
           <h2 class="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
             <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
-            라벨 스펙 1:1 맞대결
+            케어라벨 스펙 1:1 객관 비교
           </h2>
-          <p class="text-[11px] text-gray-500">두 의류의 케어라벨 혼용률과 가성비를 정밀 대조합니다.</p>
+          <p class="text-[11px] text-gray-500">공식 온라인몰 공시 혼용률 및 정가 기준 1:1 팩트 대조</p>
         </div>
         <button id="close-modal-x" class="w-7 h-7 rounded-full bg-gray-200/80 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors cursor-pointer">
           <i class="fa-solid fa-xmark text-xs"></i>
@@ -364,5 +421,7 @@
 
   <!-- 애플리케이션 스크립트 분리 -->
   <script src="app.js"></script>
+  <!-- 옷라벨 AI CS 어시스턴트 & 오류 제보 플로팅 위젯 -->
+  <script src="cs-widget.js"></script>
 </body>
 </html>
