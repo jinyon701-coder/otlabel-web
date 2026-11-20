@@ -4,9 +4,11 @@
 Otlabel SPA 상품 케어라벨 정보 자동 수집기
 - 무신사스탠다드, 스파오, 탑텐, 유니클로 인기 상품 크롤링
 - Playwright Headless Chromium 기반
-- 구글 스프레드시트 자동 동기화 (중복 URL 스킵)
+- Google Apps Script Webhook 기반 구글 시트 동기화 (중복 URL 스킵)
 """
 
+import csv
+import io
 import json
 import logging
 import os
@@ -15,9 +17,8 @@ import sys
 import time
 from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
-from google.oauth2.service_account import Credentials
-import gspread
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+import requests
 
 # 로깅 설정
 logging.basicConfig(
@@ -27,7 +28,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("otlabel-crawler")
 
-# 기본 수집 대상 인기 상품 URL 목록 (확장 가능)
+# Google Apps Script 웹앱 및 시트 CSV URL 설정
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzsBa5RxgQ9MxM1Ln-FM0VHGepdhfefwBF2izQELQKCV8MHwJMw27pwHQ1V7EKuO-mfgQ/exec"
+SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1TohouE0HOPXrsH-k5A55Twv3lqsc7bHIH7m74SWRJZ8/export?format=csv"
+FALLBACK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT-_JrM639eTC06eeehdde2pEcvGo4cuxFGNdoIEXgFJjA0Ba5B_4S3FTMmhRympEOmcTojaqn5LOWP/pub?output=csv"
+
+# 기본 수집 대상 인기 상품 URL 목록
 TARGET_URLS: List[str] = [
     # 1. 무신사 스탠다드
     "https://www.musinsa.com/products/4356794",  # [시티 레저] 후디드 라이트 다운 재킷
@@ -71,26 +77,61 @@ def determine_brand(url: str, title: str = "") -> str:
     return "기타"
 
 
-def connect_google_sheet():
-    creds_raw = os.environ.get("GOOGLE_CREDENTIALS_JSON", "").strip()
-    if not creds_raw:
-        logger.error("GOOGLE_CREDENTIALS_JSON 환경변수가 없습니다.")
-        return None
+def get_existing_links() -> set:
+    """공개 구글 시트 CSV export URL에서 기존 등록된 상품 link(E열) 목록을 조회하여 중복 방지"""
+    existing_links = set()
+    csv_urls = [SHEET_CSV_URL, FALLBACK_CSV_URL]
+
+    for url in csv_urls:
+        try:
+            logger.info(f"구글 시트 CSV 조회 시도: {url}")
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+            if resp.status_code == 200 and resp.text.strip():
+                reader = csv.reader(io.StringIO(resp.text))
+                header = next(reader, None)
+                link_col_idx = 4  # 기본 E열 (0-based: 4)
+                if header:
+                    for idx, col in enumerate(header):
+                        if col.strip().lower() == "link":
+                            link_col_idx = idx
+                            break
+                for row in reader:
+                    if len(row) > link_col_idx and row[link_col_idx].strip():
+                        existing_links.add(row[link_col_idx].strip())
+                logger.info(f"기존 등록 상품 조회 완료: 총 {len(existing_links)}개 링크 확인")
+                return existing_links
+            else:
+                logger.warning(f"CSV 조회 응답 코드 비정상: HTTP {resp.status_code}")
+        except Exception as e:
+            logger.warning(f"CSV 조회 중 오류 발생 ({url}): {e}")
+
+    logger.warning("기존 등록 링크를 가져오지 못했습니다. 중복 검사 없이 계속 진행합니다.")
+    return existing_links
+
+
+def send_to_webhook(items: List[Dict[str, any]]) -> bool:
+    """수집된 유효 상품 리스트를 Google Apps Script 웹앱으로 JSON 전송"""
+    if not items:
+        logger.info("전송할 상품 데이터가 없습니다.")
+        return True
+
+    logger.info(f"Google Apps Script 웹앱으로 {len(items)}건의 상품 데이터 전송 시작...")
     try:
-        creds_dict = json.loads(creds_raw)
-        scopes = [
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive"
-        ]
-        credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-        client = gspread.authorize(credentials)
-        spreadsheet = client.open_by_key("1TohouE0HOPXrsH-k5A55Twv3lqsc7bHIH7m74SWRJZ8")
-        worksheet = spreadsheet.get_worksheet(0)
-        logger.info(f"구글 스프레드시트 연결 성공: '{spreadsheet.title}' (시트: {worksheet.title})")
-        return worksheet
+        response = requests.post(
+            WEBHOOK_URL,
+            json=items,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        if response.status_code == 200:
+            logger.info(f"✓ 웹앱 전송 성공! (응답: {response.text.strip()[:100]})")
+            return True
+        else:
+            logger.error(f"✕ 웹앱 전송 실패 (HTTP {response.status_code}): {response.text[:200]}")
+            return False
     except Exception as e:
-        logger.error(f"구글 스프레드시트 연결 실패: {type(e).__name__} - {e}")
-        return None
+        logger.error(f"✕ 웹앱 전송 중 네트워크/요청 오류 발생: {e}")
+        return False
 
 
 def extract_price(raw_text: str) -> int:
@@ -217,7 +258,7 @@ def parse_product_page(page, url: str) -> Optional[Dict[str, any]]:
         "price": price,
         "fabric": fabric,
         "link": url,
-        "isSponsored": "FALSE"
+        "isSponsored": False
     }
 
 
@@ -225,22 +266,7 @@ def run_crawler():
     """메인 크롤링 파이프라인"""
     logger.info("=== Otlabel SPA 케어라벨 자동 수집기 가동 ===")
 
-    worksheet = connect_google_sheet()
-    existing_links = set()
-
-    if worksheet:
-        try:
-            records = worksheet.get_all_values()
-            if records and len(records) > 1:
-                # E열 (index 4) 링크 목록 추출
-                for r in records[1:]:
-                    if len(r) > 4 and r[4].strip():
-                        existing_links.add(r[4].strip())
-            logger.info(f"구글 시트 내 기존 등록 상품 수: {len(existing_links)}개")
-        except Exception as e:
-            logger.warning(f"기존 링크 목록 조회 중 오류 발생 (진행 계속): {e}")
-    else:
-        logger.warning("구글 시트가 연결되지 않아 로컬 테스트 모드로 수집만 수행합니다.")
+    existing_links = get_existing_links()
 
     # 수집 대상 필터링 (중복 URL 제외)
     pending_urls = [u for u in TARGET_URLS if u not in existing_links]
@@ -250,7 +276,7 @@ def run_crawler():
         logger.info("새로 수집할 신규 상품이 없습니다. 작업을 종료합니다.")
         return
 
-    success_count = 0
+    collected_items: List[Dict[str, any]] = []
     fail_count = 0
 
     with sync_playwright() as p:
@@ -275,18 +301,7 @@ def run_crawler():
             try:
                 item = parse_product_page(page, url)
                 if item:
-                    # 구글 시트에 행 추가 (A~F열: brand, name, price, fabric, link, isSponsored)
-                    if worksheet:
-                        worksheet.append_row([
-                            item["brand"],
-                            item["name"],
-                            item["price"],
-                            item["fabric"],
-                            item["link"],
-                            item["isSponsored"]
-                        ])
-                        logger.info("  -> 구글 스프레드시트에 추가 완료!")
-                    success_count += 1
+                    collected_items.append(item)
                 else:
                     fail_count += 1
             except (PlaywrightTimeoutError, Exception) as e:
@@ -298,8 +313,11 @@ def run_crawler():
 
         browser.close()
 
-    logger.info("\n=== 수집 완료 요약 ===")
-    logger.info(f"성공: {success_count}건 | 실패/스킵: {fail_count}건 | 총계: {len(pending_urls)}건")
+    logger.info("\n=== 크롤링 완료 요약 ===")
+    logger.info(f"유효 수집 성공: {len(collected_items)}건 | 실패/스킵: {fail_count}건 | 대상: {len(pending_urls)}건")
+
+    if collected_items:
+        send_to_webhook(collected_items)
 
 
 if __name__ == "__main__":
