@@ -1,3 +1,32 @@
+# Node & Web Build
+node_modules/
+www/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.env
+
+# Android Build Outputs & Local Config
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/*.iml
+android/app/*.iml
+android/local.properties
+android/captures/
+.externalNativeBuild/
+.cxx/
+
+# App Bundles & Binaries
+*.apk
+*.aab
+
+# OS files
+.DS_Store
+Thumbs.db
