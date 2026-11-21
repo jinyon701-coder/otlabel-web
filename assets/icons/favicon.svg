@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient: Deep Midnight Navy -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="60%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- Cream / Oatmeal Tag Gradient -->
+    <linearGradient id="cream-tag-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fdfbf7"/>
+    </linearGradient>
+
+    <!-- Indigo Tag Gradient -->
+    <linearGradient id="indigo-tag-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+
+    <!-- Emerald Accent Gradient -->
+    <linearGradient id="emerald-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Soft Ambient Glow -->
+    <radialGradient id="ambient-glow" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#059669" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="shadow-tag" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="shadow-center" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#059669" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Base Squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)"/>
+
+  <!-- Ambient Glow -->
+  <circle cx="256" cy="240" r="210" fill="url(#ambient-glow)"/>
+
+  <!-- Subtle Outer Border Accent -->
+  <rect x="3" y="3" width="506" height="506" rx="109" fill="none" stroke="#334155" stroke-width="3" stroke-opacity="0.6"/>
+
+  <!-- Left Care Label Tag (Cream / Oatmeal Fabric Tag) -->
+  <g transform="translate(196, 260) rotate(-14) translate(-196, -260)" filter="url(#shadow-tag)">
+    <!-- Tag Shape: Cut corners at top, rounded corners at bottom -->
+    <path d="M 125,120 L 175,70 L 255,70 L 255,370 C 255,385 243,397 228,397 L 145,397 C 130,397 118,385 118,370 L 118,135 Z"
+          fill="url(#cream-tag-grad)" stroke="#e2e8f0" stroke-width="3"/>
+    <!-- Tag Eyelet (Punch Hole) -->
+    <circle cx="215" cy="105" r="14" fill="#0f172a"/>
+    <circle cx="215" cy="105" r="9" fill="#e2e8f0"/>
+    <!-- Stitched Edge -->
+    <path d="M 132,130 L 172,90 L 243,90 L 243,383 L 132,383 Z"
+          fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6,4"/>
+    <!-- Care Label Text Lines -->
+    <rect x="145" y="165" width="80" height="7" rx="3.5" fill="#475569"/>
+    <rect x="145" y="183" width="60" height="5" rx="2.5" fill="#94a3b8"/>
+    <!-- Fabric Spec Progress Bar (Left - Natural fiber 100%) -->
+    <rect x="145" y="210" width="80" height="8" rx="4" fill="#e2e8f0"/>
+    <rect x="145" y="210" width="68" height="8" rx="4" fill="url(#emerald-grad)"/>
+    <!-- Care Icons Mockup -->
+    <g transform="translate(145, 235)">
+      <!-- Wash basin icon -->
+      <path d="M 4,4 L 20,4 L 17,16 L 7,16 Z" fill="none" stroke="#64748b" stroke-width="2"/>
+      <path d="M 6,7 Q 12,4 18,7" fill="none" stroke="#64748b" stroke-width="1.5"/>
+      <!-- Iron icon -->
+      <path d="M 32,16 L 46,16 C 49,16 51,13 49,10 L 46,6 L 35,6 Z" fill="none" stroke="#64748b" stroke-width="2"/>
+    </g>
+  </g>
+
+  <!-- Right Care Label Tag (Deep Indigo Technical Tag) -->
+  <g transform="translate(316, 260) rotate(14) translate(-316, -260)" filter="url(#shadow-tag)">
+    <path d="M 257,70 L 337,70 L 387,120 L 394,370 C 394,385 382,397 367,397 L 284,397 C 269,397 257,385 257,370 Z"
+          fill="url(#indigo-tag-grad)" stroke="#4338ca" stroke-width="3"/>
+    <!-- Tag Eyelet -->
+    <circle cx="297" cy="105" r="14" fill="#0f172a"/>
+    <circle cx="297" cy="105" r="9" fill="#c7d2fe"/>
+    <!-- Stitched Edge -->
+    <path d="M 269,90 L 340,90 L 380,130 L 380,383 L 269,383 Z"
+          fill="none" stroke="#818cf8" stroke-width="2" stroke-dasharray="6,4" stroke-opacity="0.7"/>
+    <!-- Spec lines -->
+    <rect x="287" y="165" width="80" height="7" rx="3.5" fill="#ffffff" fill-opacity="0.95"/>
+    <rect x="287" y="183" width="55" height="5" rx="2.5" fill="#c7d2fe"/>
+    <!-- Fabric Spec Progress Bar (Right) -->
+    <rect x="287" y="210" width="80" height="8" rx="4" fill="#312e81"/>
+    <rect x="287" y="210" width="52" height="8" rx="4" fill="#818cf8"/>
+    <!-- Synthetic fiber / quick dry icon -->
+    <g transform="translate(287, 235)">
+      <circle cx="10" cy="10" r="7" fill="none" stroke="#c7d2fe" stroke-width="2"/>
+      <path d="M 7,10 L 10,13 L 15,7" fill="none" stroke="#c7d2fe" stroke-width="2"/>
+      <circle cx="34" cy="10" r="7" fill="none" stroke="#c7d2fe" stroke-width="2"/>
+    </g>
+  </g>
+
+  <!-- Tag Hanging Strings Interlocking at Top Center -->
+  <path d="M 215,95 C 225,50 256,38 256,38 C 256,38 287,50 297,95" 
+        fill="none" stroke="#fdfbf7" stroke-width="4.5" stroke-linecap="round" stroke-opacity="0.85"/>
+
+  <!-- Center Floating 1:1 Versus Balance Symbol Emblem -->
+  <g filter="url(#shadow-center)">
+    <!-- Central Hexagonal / Squircle Badge -->
+    <rect x="186" y="280" width="140" height="84" rx="24" fill="#0f172a" stroke="#059669" stroke-width="4"/>
+    
+    <!-- Balance Scale Beam -->
+    <line x1="208" y1="310" x2="304" y2="310" stroke="#34d399" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Center Pivot Fulcrum -->
+    <polygon points="256,298 250,314 262,314" fill="#34d399"/>
+    
+    <!-- Scale Pans (Left: Emerald Natural, Right: Indigo Blend) -->
+    <!-- Left Pan -->
+    <line x1="214" y1="310" x2="214" y2="322" stroke="#34d399" stroke-width="2"/>
+    <path d="M 204,322 C 204,328 224,328 224,322 Z" fill="#059669"/>
+
+    <!-- Right Pan -->
+    <line x1="298" y1="310" x2="298" y2="322" stroke="#34d399" stroke-width="2"/>
+    <path d="M 288,322 C 288,328 308,328 308,322 Z" fill="#6366f1"/>
+
+    <!-- 1:1 Badge Text -->
+    <text x="256" y="350" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" 
+          font-size="20" font-weight="900" fill="#fdfbf7" text-anchor="middle" letter-spacing="1">1:1</text>
+  </g>
+
+  <!-- Bottom Brand Title "옷라벨" Accent -->
+  <text x="256" y="445" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" 
+        font-size="36" font-weight="900" fill="#fdfbf7" text-anchor="middle" letter-spacing="-0.5">
+    옷라벨
+  </text>
+  <text x="256" y="475" font-family="-apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif" 
+        font-size="14" font-weight="700" fill="#34d399" text-anchor="middle" letter-spacing="2">
+    CARE LABEL 1:1
+  </text>
+</svg>

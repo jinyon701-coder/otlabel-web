@@ -248,24 +248,49 @@ button[onclick*="handleOutboundClick"]:active {
 /* 9. 플로팅 위젯 컨테이너 (우측 하단 AI CS/고객지원 슬롯) */
 #floating-widget-anchor {
   position: fixed;
-  bottom: 84px;
-  right: calc(50% - 210px);
-  z-index: 45; /* 비교 모달(z-50) 아래, 하단 맞대결 바(z-20) 및 헤더(z-30) 위 */
+  bottom: 24px;
+  right: max(16px, calc(50% - 210px));
+  z-index: 40; /* 하단 트레이(z-30) 위, 바텀시트 모달(z-50) 아래 - 터치 및 가림 방지 최적화 */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
   pointer-events: none; /* 컨테이너 자체는 클릭 투과, 내부 위젯만 pointer-events: auto */
+  transition: bottom 0.28s cubic-bezier(0.16, 1, 0.3, 1), right 0.25s ease;
 }
 
 #floating-widget-anchor > * {
   pointer-events: auto;
 }
 
+/* 하단 비교 트레이/바 활성화 시 (클래스 및 CSS :has 감지 지원) */
+#floating-widget-anchor.has-bottom-tray,
+#floating-widget-anchor.has-bottom-bar,
+body:has(#compare-bottom-bar:not(.hidden)) #floating-widget-anchor,
+body:has([id*="compare-bottom"]:not(.hidden)) #floating-widget-anchor,
+body:has([id*="compare-tray"]:not(.hidden)) #floating-widget-anchor,
+body:has([class*="compare-tray"]:not(.hidden)) #floating-widget-anchor,
+body:has(.compare-tray-active) #floating-widget-anchor {
+  bottom: 92px;
+}
+
 @media (max-width: 448px) {
   #floating-widget-anchor {
     right: 16px;
-    bottom: 80px;
+    right: max(16px, env(safe-area-inset-right, 16px));
+    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  }
+
+  #floating-widget-anchor.has-bottom-tray,
+  #floating-widget-anchor.has-bottom-bar,
+  body:has(#compare-bottom-bar:not(.hidden)) #floating-widget-anchor,
+  body:has([id*="compare-bottom"]:not(.hidden)) #floating-widget-anchor,
+  body:has([id*="compare-tray"]:not(.hidden)) #floating-widget-anchor,
+  body:has([class*="compare-tray"]:not(.hidden)) #floating-widget-anchor,
+  body:has(.compare-tray-active) #floating-widget-anchor {
+    bottom: 92px;
+    bottom: max(92px, calc(92px + env(safe-area-inset-bottom, 0px)));
   }
 }
 
@@ -443,7 +468,7 @@ button[onclick*="handleOutboundClick"]:active {
 .cs-chat-popup {
   width: min(380px, calc(100vw - 32px));
   height: 540px;
-  max-height: min(560px, calc(100dvh - 150px));
+  max-height: min(540px, calc(100dvh - 170px));
   background-color: #ffffff;
   border-radius: 20px;
   border: 1px solid rgba(226, 232, 240, 0.95);
@@ -1078,7 +1103,180 @@ button[onclick*="handleOutboundClick"]:active {
   line-height: 1.4;
 }
 
-/* 모바일 Safe Area 여백 지원 (iOS Home Indicator) */
-#compare-bottom-bar {
+/* 하단 비교 트레이 z-index 및 모바일 Safe Area 여백 지원 (iOS Home Indicator) */
+#compare-bottom-bar,
+.compare-tray,
+[id*="compare-bottom"],
+[id*="compare-tray"] {
+  z-index: 30; /* 1팀 하단 비교 트레이(z-30) 최적화 */
   padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
 }
+
+/* ==========================================================================
+   11. PC 웹 vs 모바일 반응형 분리 시스템 (Responsive Layout Architecture)
+   ========================================================================== */
+
+/* (1) 기본 앱 셸 컨테이너 */
+.app-shell {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  min-height: 100vh;
+  background-color: #ffffff;
+  transition: max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* (2) 모바일 뷰포트 (<= 768px) - 1열 슬림 카드 & 바텀시트 모달 */
+@media (max-width: 768px) {
+  .app-shell {
+    max-width: 448px; /* max-w-md 한 손 조작 인체공학 최적화 */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  }
+
+  /* 1열 슬림 상품 카드 리스트 */
+  .product-grid-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* 모바일 바텀시트 모달 레이아웃 */
+  #compare-modal {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  #compare-modal:not(.hidden) .bottom-sheet-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-top-left-radius: 1.75rem !important;
+    border-top-right-radius: 1.75rem !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    max-height: 90vh !important;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25) !important;
+    animation: bottomSheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  }
+
+  /* 모바일 바텀시트 드래그 핸들 바 */
+  .bottom-sheet-handle {
+    display: block;
+    width: 44px;
+    height: 4.5px;
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+  }
+
+  /* 모바일 하단 비교 트레이 */
+  #compare-bottom-bar {
+    display: flex;
+  }
+
+  #compare-bottom-bar.hidden {
+    display: none !important;
+  }
+}
+
+@keyframes bottomSheetSlideUp {
+  0% {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* (3) 태블릿 중간 뷰포트 (769px ~ 1023px) */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .app-shell {
+    max-width: 768px;
+  }
+
+  .product-grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  #compare-bottom-bar {
+    display: flex;
+  }
+
+  #compare-bottom-bar.hidden {
+    display: none !important;
+  }
+}
+
+/* (4) PC 데스크톱 뷰포트 (>= 1024px) - 3~4열 그리드 + Split-View 대시보드 */
+@media (min-width: 1024px) {
+  .app-shell {
+    max-width: 1360px; /* 1280px ~ 1440px 대응 와이드 캔버스 */
+    box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
+  }
+
+  /* PC 상품 그리드: 좌측 컬럼 내 2열 배치 (전체 화면 기준 3~4열 효과) */
+  .product-grid-responsive {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-content: start;
+  }
+
+  @media (min-width: 1280px) {
+    .product-grid-responsive {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+  }
+
+  /* PC에서는 하단 트레이를 숨김 (우측 Split-View 대시보드가 상시 노출) */
+  #compare-bottom-bar {
+    display: none !important;
+  }
+
+  /* PC 우측 1:1 실시간 스펙 비교 대시보드 (Split-View) */
+  #desktop-compare-sticky {
+    position: sticky;
+    top: 76px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 2px;
+  }
+
+  #desktop-compare-sticky::-webkit-scrollbar {
+    width: 5px;
+  }
+  #desktop-compare-sticky::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  #desktop-compare-sticky::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* PC 센터 모달 스타일 */
+  #compare-modal {
+    align-items: center !important;
+    padding: 1.5rem !important;
+  }
+
+  #compare-modal .bottom-sheet-modal {
+    border-radius: 1.25rem !important;
+    max-width: 560px !important;
+    max-height: 85vh !important;
+  }
+
+  .bottom-sheet-handle {
+    display: none;
+  }
+
+  /* 플로팅 고객지원 위젯 위치: PC 우측 하단 고정 */
+  #floating-widget-anchor {
+    right: 32px !important;
+    bottom: 32px !important;
+  }
+}
+

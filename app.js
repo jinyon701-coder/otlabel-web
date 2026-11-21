@@ -616,6 +616,433 @@ function detectCategory(name, fabric) {
   return "기타";
 }
 
+// =============================================================
+// 8-1. 저작권 안전 고품질 스튜디오 비주얼 시스템 (SVG 실시간 생성 엔진)
+// =============================================================
+
+// 브랜드별 시그니처 컬러 및 스타일 맵 (유니클로, 무신사스탠다드, 스파오, 탑텐, ZARA, 지오다노, H&M 등)
+const BRAND_STYLE_MAP = {
+  "유니클로": {
+    primary: "#ED1D24",
+    accent: "#FFFFFF",
+    bgGradient: "from-red-50/70 via-rose-50/40 to-white",
+    badgeBg: "bg-[#ED1D24] text-white",
+    border: "border-red-100",
+    name: "UNIQLO"
+  },
+  "무신사스탠다드": {
+    primary: "#111111",
+    accent: "#64748B", // 슬레이트
+    bgGradient: "from-gray-100/80 via-slate-50/50 to-white",
+    badgeBg: "bg-[#111111] text-white",
+    border: "border-gray-200",
+    name: "MUSINSA STANDARD"
+  },
+  "스파오": {
+    primary: "#003876",
+    accent: "#3B82F6", // 소프트네이비/블루
+    bgGradient: "from-blue-50/70 via-sky-50/40 to-white",
+    badgeBg: "bg-[#003876] text-white",
+    border: "border-blue-100",
+    name: "SPAO"
+  },
+  "탑텐": {
+    primary: "#D71920",
+    accent: "#374151", // 차콜
+    bgGradient: "from-rose-50/70 via-stone-50/40 to-white",
+    badgeBg: "bg-[#D71920] text-white",
+    border: "border-rose-100",
+    name: "TOPTEN10"
+  },
+  "zara": {
+    primary: "#000000",
+    accent: "#D4AF37", // 골드베이지
+    bgGradient: "from-amber-50/60 via-neutral-50/50 to-white",
+    badgeBg: "bg-black text-amber-300",
+    border: "border-amber-100",
+    name: "ZARA"
+  },
+  "지오다노": {
+    primary: "#1E3A8A",
+    accent: "#6B7280", // 그레이
+    bgGradient: "from-blue-50/70 via-slate-50/50 to-white",
+    badgeBg: "bg-[#1E3A8A] text-white",
+    border: "border-blue-100",
+    name: "GIORDANO"
+  },
+  "h&m": {
+    primary: "#E50010",
+    accent: "#71717A", // 로즈그레이
+    bgGradient: "from-red-50/60 via-zinc-50/50 to-white",
+    badgeBg: "bg-[#E50010] text-white",
+    border: "border-red-100",
+    name: "H&M"
+  }
+};
+
+function getBrandStyle(brand) {
+  const clean = (brand || "").trim().toLowerCase();
+  for (const key in BRAND_STYLE_MAP) {
+    if (clean.includes(key.toLowerCase()) || key.toLowerCase().includes(clean)) {
+      return BRAND_STYLE_MAP[key];
+    }
+  }
+  return {
+    primary: "#4F46E5",
+    accent: "#818CF8",
+    bgGradient: "from-indigo-50/70 via-purple-50/40 to-white",
+    badgeBg: "bg-indigo-600 text-white",
+    border: "border-indigo-100",
+    name: brand || "Otlabel"
+  };
+}
+
+// 섬유별 대표 컬러 맵 (원단 주요 혼용률 미니 그래픽 투톤/멀티톤 바)
+const FIBER_COLOR_MAP = {
+  "면": "#2563EB",       // Blue (코튼)
+  "수피마": "#1D4ED8",
+  "울": "#7C3AED",       // Purple (모/양모)
+  "캐시미어": "#6D28D9",
+  "특수모": "#8B5CF6",
+  "실크": "#D97706",     // Amber (견)
+  "린넨": "#059669",     // Emerald (마)
+  "모달": "#0D9488",     // Teal (재생섬유)
+  "텐셀": "#0F766E",
+  "레이온": "#14B8A6",
+  "폴리에스터": "#64748B", // Slate (합성섬유)
+  "나일론": "#0284C7",   // Sky
+  "스판덱스": "#DB2777", // Pink (폴리우레탄)
+  "다운": "#EA580C",     // Orange (충전재)
+  "가죽": "#92400E",
+  "기타": "#9CA3AF"      // Gray
+};
+
+function getFiberColor(name) {
+  const n = (name || "").toLowerCase();
+  for (const k in FIBER_COLOR_MAP) {
+    if (n.includes(k.toLowerCase())) return FIBER_COLOR_MAP[k];
+  }
+  return "#9CA3AF";
+}
+
+function getFabricSummary(analysis) {
+  if (!analysis) return "라벨 확인 권장";
+  if (Array.isArray(analysis.components) && analysis.components.length > 0) {
+    if (analysis.components.length === 1 && analysis.components[0].percent === 100) {
+      return `${analysis.components[0].name} 100% (단일 소재)`;
+    }
+    return analysis.components.slice(0, 2).map(c => `${c.name} ${c.percent}%`).join(" · ");
+  }
+  return analysis.keySummary || "라벨 확인 권장";
+}
+
+function getFabricMiniProgressBar(analysis) {
+  if (!analysis || !Array.isArray(analysis.components) || analysis.components.length === 0) {
+    const score = analysis?.score || 50;
+    return `<div style="width: ${score}%; background-color: #6366f1;" class="h-full rounded-full transition-all" title="소재 환산 지표 ${score}점"></div>`;
+  }
+  
+  return analysis.components.map(c => {
+    const color = getFiberColor(c.name);
+    return `<div style="width: ${c.percent}%; background-color: ${color};" class="h-full transition-all" title="${escapeHTML(c.name)} ${c.percent}%"></div>`;
+  }).join("");
+}
+
+function detectDetailedApparelType(category, name = "", fabric = "") {
+  const text = `${category || ""} ${name || ""} ${fabric || ""}`.toLowerCase();
+
+  // 1. 패딩 / 다운
+  if (/다운|패딩|푸퍼|puffer|down\s*jacket|충전재|오리솜털|거위솜털|씬라이트|파카/i.test(text)) {
+    return "padding";
+  }
+  // 2. 코트
+  if (/코트|coat|트렌치|발마칸|싱글코트|더블코트|울코트/i.test(text)) {
+    return "coat";
+  }
+  // 3. 자켓 / 블레이저
+  if (/자켓|재킷|블레이저|blazer|jacket|테일러드|수트|라이더|가디건|cardigan/i.test(text)) {
+    return "jacket";
+  }
+  // 4. 니트 / 스웨터
+  if (/니트|스웨터|풀오버|sweater|knit|메리노|램스울|캐시미어|터틀넥/i.test(text)) {
+    return "knit";
+  }
+  // 5. 셔츠
+  if (/셔츠|드레스셔츠|옥스포드|카라티|shirt|oxford|남방/i.test(text)) {
+    return "shirt";
+  }
+  // 6. 데님 / 청바지
+  if (/데님|청바지|진|jeans|denim/i.test(text)) {
+    return "denim";
+  }
+  // 7. 팬츠 / 슬랙스
+  if (/슬랙스|팬츠|바지|치노|쇼츠|반바지|slacks|pants|trousers/i.test(text)) {
+    return "slacks";
+  }
+  // 8. 이너 / 기능성
+  if (/히트텍|웜모달|에어리즘|내의|속옷|underwear|양말|socks|브라|팬티|쿨에어/i.test(text)) {
+    return "inner";
+  }
+  // 9. 티셔츠 / 맨투맨
+  if (/티셔츠|t-shirt|티|크루넥|맨투맨|후드|스웨트|sweat/i.test(text)) {
+    return "tshirt";
+  }
+
+  // 기본 카테고리 fallback
+  if (category === "아우터") return "jacket";
+  if (category === "하의") return "slacks";
+  if (category === "상의") return "tshirt";
+  if (category === "이너/기타") return "inner";
+  return "tshirt";
+}
+
+let _svgUniqueCounter = 0;
+
+/**
+ * 고품질 스튜디오 스타일 SVG 의류 일러스트레이션 실시간 생성 엔진
+ * @param {string} category 카테고리 (상의, 하의, 아우터, 티셔츠, 셔츠, 니트 등)
+ * @param {string} brand 브랜드 (유니클로, 무신사스탠다드, 스파오, 탑텐, ZARA, 지오다노 등)
+ * @param {string} fabric 공식 케어라벨 혼용률 텍스트
+ * @param {object} analysis 케어라벨 분석 객체
+ * @param {object} options 추가 렌더링 옵션 ({ size: 'card'|'modal', name: '...' })
+ * @returns {string} 고해상도 반응형 SVG 마크업 문자열
+ */
+function getCategoryVisualSVG(category, brand, fabric, analysis, options = {}) {
+  _svgUniqueCounter++;
+  const uid = `otl_${Date.now()}_${_svgUniqueCounter}`;
+  const brandStyle = getBrandStyle(brand);
+  const apparelType = detectDetailedApparelType(category, options.name || "", fabric || "");
+
+  let garmentStartColor = "#FFFFFF";
+  let garmentEndColor = "#E2E8F0";
+  let strokeColor = "#475569";
+  let highlightColor = brandStyle.accent || "#FFFFFF";
+
+  switch (apparelType) {
+    case "denim":
+      garmentStartColor = "#2563EB";
+      garmentEndColor = "#1E3A8A";
+      strokeColor = "#0F172A";
+      highlightColor = "#D97706";
+      break;
+    case "padding":
+      garmentStartColor = "#475569";
+      garmentEndColor = "#0F172A";
+      strokeColor = "#020617";
+      highlightColor = brandStyle.primary;
+      break;
+    case "jacket":
+      garmentStartColor = "#334155";
+      garmentEndColor = "#1E293B";
+      strokeColor = "#0F172A";
+      highlightColor = brandStyle.primary;
+      break;
+    case "coat":
+      garmentStartColor = "#475569";
+      garmentEndColor = "#1E293B";
+      strokeColor = "#0F172A";
+      highlightColor = brandStyle.accent;
+      break;
+    case "knit":
+      garmentStartColor = "#FEF3C7";
+      garmentEndColor = "#CBD5E1";
+      strokeColor = "#64748B";
+      highlightColor = brandStyle.primary;
+      break;
+    case "slacks":
+      garmentStartColor = "#334155";
+      garmentEndColor = "#1E293B";
+      strokeColor = "#0F172A";
+      highlightColor = brandStyle.accent;
+      break;
+    case "shirt":
+      garmentStartColor = "#FFFFFF";
+      garmentEndColor = "#E2E8F0";
+      strokeColor = "#64748B";
+      highlightColor = brandStyle.primary;
+      break;
+    case "inner":
+      garmentStartColor = "#F8FAFC";
+      garmentEndColor = "#E2E8F0";
+      strokeColor = "#64748B";
+      highlightColor = brandStyle.primary;
+      break;
+    case "tshirt":
+    default:
+      garmentStartColor = "#FFFFFF";
+      garmentEndColor = "#E2E8F0";
+      strokeColor = "#64748B";
+      highlightColor = brandStyle.primary;
+      break;
+  }
+
+  let silhouettePaths = "";
+
+  if (apparelType === "tshirt") {
+    silhouettePaths = `
+      <path d="M100 36 L68 48 L54 78 L72 86 L84 66 L86 140 L154 140 L156 66 L168 86 L186 78 L172 48 L140 36 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M100 36 Q120 48 140 36" fill="none" stroke="${brandStyle.primary}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M103 39 Q120 46 137 39" fill="none" stroke="#CBD5E1" stroke-width="1" stroke-linecap="round"/>
+      <line x1="54" y1="78" x2="72" y2="86" stroke="${highlightColor}" stroke-width="2" stroke-linecap="round"/>
+      <line x1="186" y1="78" x2="168" y2="86" stroke="${highlightColor}" stroke-width="2" stroke-linecap="round"/>
+      <line x1="86" y1="136" x2="154" y2="136" stroke="#CBD5E1" stroke-width="1.5"/>
+      <rect x="130" y="62" width="16" height="18" rx="2" fill="none" stroke="${brandStyle.primary}" stroke-width="1.2" opacity="0.75"/>
+    `;
+  } else if (apparelType === "shirt") {
+    silhouettePaths = `
+      <path d="M96 34 L66 48 L52 84 L70 90 L80 66 L84 142 Q120 146 156 142 L160 66 L170 90 L188 84 L174 48 L144 34 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <line x1="120" y1="46" x2="120" y2="144" stroke="#CBD5E1" stroke-width="2"/>
+      <circle cx="120" cy="62" r="1.8" fill="#FFFFFF" stroke="#64748B" stroke-width="1"/>
+      <circle cx="120" cy="82" r="1.8" fill="#FFFFFF" stroke="#64748B" stroke-width="1"/>
+      <circle cx="120" cy="102" r="1.8" fill="#FFFFFF" stroke="#64748B" stroke-width="1"/>
+      <circle cx="120" cy="122" r="1.8" fill="#FFFFFF" stroke="#64748B" stroke-width="1"/>
+      <path d="M96 34 L120 46 L108 52 L96 34 Z" fill="#FFFFFF" stroke="${brandStyle.primary}" stroke-width="1.8"/>
+      <path d="M144 34 L120 46 L132 52 L144 34 Z" fill="#FFFFFF" stroke="${brandStyle.primary}" stroke-width="1.8"/>
+      <circle cx="120" cy="43" r="1.5" fill="${brandStyle.primary}"/>
+      <path d="M134 68 L152 68 L152 88 L143 94 L134 88 Z" fill="none" stroke="${highlightColor}" stroke-width="1.4" opacity="0.85"/>
+    `;
+  } else if (apparelType === "knit") {
+    silhouettePaths = `
+      <path d="M98 35 L60 48 L42 98 L58 104 L74 72 L80 140 L160 140 L166 72 L182 104 L198 98 L180 48 L142 35 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M98 35 Q120 45 142 35" fill="none" stroke="${brandStyle.primary}" stroke-width="3.5" stroke-linecap="round"/>
+      <rect x="80" y="133" width="80" height="7" rx="2" fill="none" stroke="${brandStyle.primary}" stroke-width="1.6"/>
+      <line x1="42" y1="98" x2="58" y2="104" stroke="${brandStyle.primary}" stroke-width="2.5"/>
+      <line x1="198" y1="98" x2="182" y2="104" stroke="${brandStyle.primary}" stroke-width="2.5"/>
+      <line x1="104" y1="56" x2="104" y2="128" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.7"/>
+      <line x1="120" y1="50" x2="120" y2="128" stroke="${highlightColor}" stroke-width="1.4" stroke-dasharray="4,2" opacity="0.85"/>
+      <line x1="136" y1="56" x2="136" y2="128" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="3,2" opacity="0.7"/>
+    `;
+  } else if (apparelType === "jacket") {
+    silhouettePaths = `
+      <path d="M96 34 L56 48 L44 98 L60 102 L74 68 L78 142 L162 142 L166 68 L180 102 L196 98 L184 48 L144 34 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M96 34 L110 68 L100 70 L118 96 L120 142" fill="none" stroke="#E2E8F0" stroke-width="1.8"/>
+      <path d="M144 34 L130 68 L140 70 L122 96 L120 142" fill="none" stroke="#E2E8F0" stroke-width="1.8"/>
+      <circle cx="120" cy="104" r="2.2" fill="${brandStyle.primary}" stroke="#CBD5E1" stroke-width="1"/>
+      <circle cx="120" cy="120" r="2.2" fill="${brandStyle.primary}" stroke="#CBD5E1" stroke-width="1"/>
+      <rect x="134" y="66" width="18" height="4" rx="1" fill="#FFFFFF" stroke="${brandStyle.primary}" stroke-width="1"/>
+      <path d="M140 66 L144 59 L148 66 Z" fill="${highlightColor}"/>
+      <rect x="86" y="112" width="22" height="5" rx="1.5" fill="none" stroke="#CBD5E1" stroke-width="1.2"/>
+      <rect x="132" y="112" width="22" height="5" rx="1.5" fill="none" stroke="#CBD5E1" stroke-width="1.2"/>
+    `;
+  } else if (apparelType === "padding") {
+    silhouettePaths = `
+      <path d="M92 28 Q120 22 148 28 L144 42 Q120 46 96 42 Z" fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8"/>
+      <path d="M94 40 L52 52 L36 98 L54 104 L70 74 L74 144 L166 144 L170 74 L186 104 L204 98 L188 52 L146 40 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M72 66 Q120 74 168 66" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M73 92 Q120 100 167 92" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M74 118 Q120 126 166 118" fill="none" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="120" y1="28" x2="120" y2="144" stroke="${brandStyle.primary}" stroke-width="2.6"/>
+      <rect x="118" y="56" width="4" height="8" rx="1.5" fill="${highlightColor}" stroke="#0F172A" stroke-width="0.8"/>
+      <line x1="36" y1="98" x2="54" y2="104" stroke="${brandStyle.primary}" stroke-width="3" stroke-linecap="round"/>
+      <line x1="204" y1="98" x2="186" y2="104" stroke="${brandStyle.primary}" stroke-width="3" stroke-linecap="round"/>
+    `;
+  } else if (apparelType === "coat") {
+    silhouettePaths = `
+      <path d="M96 32 L56 46 L44 96 L60 100 L72 68 L74 148 L166 148 L168 68 L180 100 L196 96 L184 46 L144 32 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M96 32 L112 76 L100 78 L118 110 L120 148" fill="none" stroke="#CBD5E1" stroke-width="2"/>
+      <path d="M144 32 L128 76 L140 78 L122 110 L120 148" fill="none" stroke="#CBD5E1" stroke-width="2"/>
+      <circle cx="114" cy="94" r="2.2" fill="${brandStyle.primary}" stroke="#FFFFFF" stroke-width="0.8"/>
+      <circle cx="126" cy="94" r="2.2" fill="${brandStyle.primary}" stroke="#FFFFFF" stroke-width="0.8"/>
+      <circle cx="114" cy="116" r="2.2" fill="${brandStyle.primary}" stroke="#FFFFFF" stroke-width="0.8"/>
+      <circle cx="126" cy="116" r="2.2" fill="${brandStyle.primary}" stroke="#FFFFFF" stroke-width="0.8"/>
+      <line x1="84" y1="112" x2="98" y2="128" stroke="${highlightColor}" stroke-width="2" stroke-linecap="round"/>
+      <line x1="156" y1="112" x2="142" y2="128" stroke="${highlightColor}" stroke-width="2" stroke-linecap="round"/>
+    `;
+  } else if (apparelType === "slacks") {
+    silhouettePaths = `
+      <rect x="88" y="32" width="64" height="11" rx="2" fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8"/>
+      <circle cx="120" cy="37" r="1.6" fill="${brandStyle.primary}"/>
+      <line x1="96" y1="32" x2="96" y2="43" stroke="#94A3B8" stroke-width="1.5"/>
+      <line x1="144" y1="32" x2="144" y2="43" stroke="#94A3B8" stroke-width="1.5"/>
+      <path d="M88 43 L92 144 L114 144 L120 84 L126 144 L148 144 L152 43 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <line x1="103" y1="48" x2="103" y2="142" stroke="${highlightColor}" stroke-width="1.4" stroke-dasharray="6,2" opacity="0.85"/>
+      <line x1="137" y1="48" x2="137" y2="142" stroke="${highlightColor}" stroke-width="1.4" stroke-dasharray="6,2" opacity="0.85"/>
+      <line x1="90" y1="48" x2="98" y2="66" stroke="#94A3B8" stroke-width="1.5"/>
+      <line x1="150" y1="48" x2="142" y2="66" stroke="#94A3B8" stroke-width="1.5"/>
+    `;
+  } else if (apparelType === "denim") {
+    silhouettePaths = `
+      <rect x="88" y="34" width="64" height="11" rx="2" fill="#1E3A8A" stroke="${strokeColor}" stroke-width="1.8"/>
+      <circle cx="120" cy="39" r="2.2" fill="#D97706" stroke="#78350F" stroke-width="0.8"/>
+      <circle cx="94" cy="50" r="1.3" fill="#D97706"/>
+      <circle cx="146" cy="50" r="1.3" fill="#D97706"/>
+      <path d="M88 45 L90 144 L114 144 L120 86 L126 144 L150 144 L152 45 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M88 48 Q100 52 98 66" fill="none" stroke="#D97706" stroke-width="1.5"/>
+      <path d="M152 48 Q140 52 142 66" fill="none" stroke="#D97706" stroke-width="1.5"/>
+      <rect x="91" y="52" width="6" height="5" rx="0.5" fill="none" stroke="#D97706" stroke-width="1"/>
+      <line x1="120" y1="45" x2="120" y2="78" stroke="#D97706" stroke-width="1.4" stroke-dasharray="3,1.5"/>
+      <line x1="90" y1="140" x2="114" y2="140" stroke="#D97706" stroke-width="1.4"/>
+      <line x1="126" y1="140" x2="150" y2="140" stroke="#D97706" stroke-width="1.4"/>
+    `;
+  } else if (apparelType === "inner") {
+    silhouettePaths = `
+      <path d="M102 36 L74 48 L62 82 L78 86 L86 64 L88 140 L152 140 L154 64 L162 86 L178 82 L166 48 L138 36 Z" 
+            fill="url(#garmentGrad_${uid})" stroke="${strokeColor}" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M102 36 Q120 46 138 36" fill="none" stroke="${brandStyle.primary}" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M102 36 Q112 80 102 140" fill="none" stroke="${brandStyle.primary}" stroke-width="1.2" stroke-dasharray="3,1.5" opacity="0.8"/>
+      <path d="M138 36 Q128 80 138 140" fill="none" stroke="${brandStyle.primary}" stroke-width="1.2" stroke-dasharray="3,1.5" opacity="0.8"/>
+      <rect x="112" y="70" width="16" height="14" rx="2" fill="none" stroke="${highlightColor}" stroke-width="1" stroke-dasharray="2,2" opacity="0.85"/>
+    `;
+  }
+
+  return `
+    <svg viewBox="0 0 240 160" class="w-full h-full drop-shadow-xs select-none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="shadow_${uid}" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#0F172A" stop-opacity="0.25"/>
+          <stop offset="60%" stop-color="#0F172A" stop-opacity="0.08"/>
+          <stop offset="100%" stop-color="#0F172A" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="garmentGrad_${uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${garmentStartColor}"/>
+          <stop offset="60%" stop-color="${garmentStartColor}"/>
+          <stop offset="100%" stop-color="${garmentEndColor}"/>
+        </linearGradient>
+        <linearGradient id="spotlight_${uid}" x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 스튜디오 바닥 은은한 그림자 -->
+      <ellipse cx="120" cy="150" rx="${apparelType === 'slacks' || apparelType === 'denim' ? '45' : '65'}" ry="7" fill="url(#shadow_${uid})"/>
+
+      <!-- 스튜디오 미니멀 옷걸이 넥 후크 -->
+      <path d="M120 18 C120 10, 132 8, 132 15 C132 21, 120 23, 120 30" fill="none" stroke="#94A3B8" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M78 46 Q120 32 162 46" fill="none" stroke="#CBD5E1" stroke-width="2.6" stroke-linecap="round" opacity="0.9"/>
+
+      <!-- 브랜드 시그니처 넥 라벨 포인트 -->
+      <rect x="114" y="36" width="12" height="4" rx="1.5" fill="${brandStyle.primary}" stroke="${brandStyle.accent}" stroke-width="0.6"/>
+      <circle cx="120" cy="38" r="0.9" fill="${brandStyle.accent}"/>
+
+      <!-- 의류 실루엣 본체 -->
+      ${silhouettePaths}
+
+      <!-- 상단 스튜디오 소프트 조명 오버레이 -->
+      <circle cx="120" cy="50" r="45" fill="url(#spotlight_${uid})" pointer-events="none"/>
+    </svg>
+  `.trim();
+}
+
+function setupResponsivePCView() {
+  const mainWrapper = document.querySelector("body > div.w-full");
+  if (mainWrapper && !mainWrapper.classList.contains("md:max-w-3xl")) {
+    mainWrapper.classList.add("md:max-w-3xl", "lg:max-w-4xl", "transition-all");
+  }
+  const mainContainer = document.getElementById("product-container");
+  if (mainContainer && !mainContainer.classList.contains("md:grid")) {
+    mainContainer.classList.add("md:grid", "md:grid-cols-2", "md:gap-3.5", "md:space-y-0");
+  }
+}
+
 function showToast(msg) {
   const toast = document.getElementById("toast-message");
   if (!toast) return;
@@ -636,7 +1063,7 @@ function renderSkeletonLoading() {
   if (!container) return;
   
   let skeletonHTML = `
-    <div class="space-y-3 animate-pulse">
+    <div class="col-span-full space-y-3 animate-pulse">
       <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-center">
         <p class="text-xs font-bold text-indigo-700 flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-spinner fa-spin text-indigo-500"></i>
@@ -648,6 +1075,8 @@ function renderSkeletonLoading() {
   for (let i = 0; i < 4; i++) {
     skeletonHTML += `
       <div class="p-4 rounded-2xl border border-gray-200 bg-white shadow-sm space-y-3">
+        <!-- 썸네일 스켈레톤 -->
+        <div class="h-32 w-full rounded-xl skeleton-box mb-1"></div>
         <div class="flex justify-between items-start">
           <div class="space-y-2 flex-1">
             <div class="flex gap-1.5">
@@ -843,38 +1272,41 @@ function renderProductCards() {
   if (!container) return;
   container.innerHTML = "";
 
+  // PC 그리드 레이아웃 적응 동기화
+  setupResponsivePCView();
+
   const searchInput = document.getElementById("search-input");
   const term = searchInput ? searchInput.value.trim().toLowerCase() : "";
   
   let filtered = products.filter(p => {
     // 브랜드 필터
-    const matchBrand = selectedBrand === "ALL" || p.brand.toLowerCase() === selectedBrand.toLowerCase();
+    const matchBrand = selectedBrand === "ALL" || (p.brand && p.brand.toLowerCase() === selectedBrand.toLowerCase());
     
     // 카테고리 필터
     const matchCategory = selectedCategory === "ALL" || (p.category && p.category === selectedCategory);
 
     // 검색어 필터
-    const matchSearch = p.name.toLowerCase().includes(term) || 
-                        p.fabric.toLowerCase().includes(term) ||
-                        p.brand.toLowerCase().includes(term);
+    const matchSearch = (p.name && p.name.toLowerCase().includes(term)) || 
+                        (p.fabric && p.fabric.toLowerCase().includes(term)) ||
+                        (p.brand && p.brand.toLowerCase().includes(term));
 
     return matchBrand && matchCategory && matchSearch;
   });
 
   // 정렬(Sort) 적용
   filtered.sort((a, b) => {
-    if (selectedSort === "costPerf") return b.costPerf - a.costPerf;
-    if (selectedSort === "score") return b.score - a.score;
-    if (selectedSort === "priceAsc") return a.price - b.price;
+    if (selectedSort === "costPerf") return (b.costPerf || 0) - (a.costPerf || 0);
+    if (selectedSort === "score") return (b.score || 0) - (a.score || 0);
+    if (selectedSort === "priceAsc") return (a.price || 0) - (b.price || 0);
     // 추천순: 스폰서 상품 우선, 그 외 id 순
     if (a.isSponsored && !b.isSponsored) return -1;
     if (!a.isSponsored && b.isSponsored) return 1;
-    return a.id - b.id;
+    return (a.id || 0) - (b.id || 0);
   });
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div class="text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400 space-y-2.5 my-2">
+      <div class="col-span-full text-center py-16 px-4 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400 space-y-2.5 my-2">
         <div class="w-12 h-12 mx-auto rounded-full bg-gray-50 flex items-center justify-center text-gray-400 text-xl border border-gray-100">
           <i class="fa-solid fa-shirt"></i>
         </div>
@@ -893,11 +1325,18 @@ function renderProductCards() {
   }
 
   filtered.forEach(p => {
+    // QA 방어: analysis 및 지표 객체 무결성 보장
+    if (!p.analysis) {
+      p.analysis = analyzeFabricEngine(p.fabric || "");
+      p.score = p.analysis.score;
+      p.costPerf = calculateCostPerformance(p.score, p.price || 0);
+    }
+
     const isSelected = compareList.some(item => item.id === p.id);
     const card = document.createElement("div");
 
     const sponsorClass = p.isSponsored ? 'sponsor-glow border-amber-300' : '';
-    card.className = `p-4 rounded-2xl border transition-all ${
+    card.className = `p-4 rounded-2xl border transition-all flex flex-col justify-between ${
       isSelected 
         ? 'bg-indigo-50/70 border-indigo-600 ring-2 ring-indigo-200 shadow-md' 
         : `bg-white border-gray-200 hover:border-gray-300 shadow-sm ${sponsorClass}`
@@ -906,18 +1345,19 @@ function renderProductCards() {
     let barColor = "bg-indigo-600";
     let scoreColor = "text-indigo-600";
     let badgeBg = "bg-indigo-50 text-indigo-700 border-indigo-100";
-    if (p.score >= 88) {
+    const scoreVal = typeof p.score === "number" ? p.score : (p.analysis?.score || 0);
+    if (scoreVal >= 88) {
       barColor = "bg-emerald-500"; scoreColor = "text-emerald-700"; badgeBg = "bg-emerald-50 text-emerald-800 border-emerald-200";
-    } else if (p.score >= 75) {
+    } else if (scoreVal >= 75) {
       barColor = "bg-indigo-600"; scoreColor = "text-indigo-600"; badgeBg = "bg-indigo-50 text-indigo-700 border-indigo-200";
-    } else if (p.score >= 60) {
+    } else if (scoreVal >= 60) {
       barColor = "bg-amber-500"; scoreColor = "text-amber-700"; badgeBg = "bg-amber-50 text-amber-800 border-amber-200";
     } else {
       barColor = "bg-rose-500"; scoreColor = "text-rose-600"; badgeBg = "bg-rose-50 text-rose-700 border-rose-200";
     }
 
     // 혼용률 핵심 배지 생성
-    const componentChips = (p.analysis && p.analysis.components.length > 0)
+    const componentChips = (p.analysis && Array.isArray(p.analysis.components) && p.analysis.components.length > 0)
       ? p.analysis.components.slice(0, 3).map(c => 
           `<span class="badge-ratio text-[10px] font-bold bg-white text-gray-800 px-2 py-0.5 rounded-md border border-gray-300 shadow-2xs">${escapeHTML(c.name)} ${c.percent}%</span>`
         ).join("")
@@ -931,57 +1371,99 @@ function renderProductCards() {
     // 카테고리 태그
     const categoryBadge = p.category ? `<span class="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">${escapeHTML(p.category)}</span>` : '';
 
-    const safeBrand = escapeHTML(p.brand);
-    const safeName = escapeHTML(p.name);
-    const safeFabric = escapeHTML(p.fabric);
-    const jsBrand = escapeJS(p.brand);
-    const jsName = escapeJS(p.name);
+    const safeBrand = escapeHTML(p.brand || "기타");
+    const safeName = escapeHTML(p.name || "의류");
+    const safeFabric = escapeHTML(p.fabric || "상세 라벨 확인 필요");
+    const jsBrand = escapeJS(p.brand || "");
+    const jsName = escapeJS(p.name || "");
     const jsLink = escapeJS(p.link || "#");
+
+    // 고품질 저작권 안전 스튜디오 비주얼 요소 생성
+    const visualSVG = getCategoryVisualSVG(p.category, p.brand, p.fabric, p.analysis, { size: "card", name: p.name });
+    const brandStyle = getBrandStyle(p.brand);
+    const fiberSummary = getFabricSummary(p.analysis);
+    const fiberMiniBar = getFabricMiniProgressBar(p.analysis);
 
     card.innerHTML = `
       ${sponsorBadge ? `<div class="mb-2 flex items-center justify-between">${sponsorBadge} <span class="text-[9px] text-amber-800 font-medium">공정위 지침 준수 광고</span></div>` : ''}
       
-      <!-- 상단: 브랜드, 카테고리, 가성비, 상품명, 가격 -->
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeBg}">${safeBrand}</span>
-            ${categoryBadge}
-            <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">가성비 ${p.costPerf} pt</span>
-            ${p.analysis?.grade ? `<span class="text-[10px] text-gray-500 font-medium">${escapeHTML(p.analysis.grade)}</span>` : ''}
-          </div>
-          <h3 class="text-xs sm:text-sm font-extrabold text-gray-900 leading-snug line-clamp-2 break-keep">${safeName}</h3>
+      <!-- 상단: 감각적인 의류 썸네일 카드 영역 (Otlabel Studio Visual) -->
+      <div class="product-visual-wrapper relative w-full rounded-2xl overflow-hidden mb-3 bg-gradient-to-br ${brandStyle.bgGradient} border border-gray-100/80 shadow-2xs group">
+        <!-- 상단: 브랜드 시그니처 배지 & Otlabel Studio Visual 워터마크 라벨 -->
+        <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10 pointer-events-none">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide text-white shadow-xs" style="background-color: ${brandStyle.primary}">
+            <span class="w-1.5 h-1.5 rounded-full border border-white/40" style="background-color: ${brandStyle.accent}"></span>
+            <span>${safeBrand}</span>
+          </span>
+          <span class="text-[9px] font-bold text-gray-500 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full border border-gray-200/70 flex items-center gap-1 shadow-2xs">
+            <i class="fa-solid fa-camera text-[8px] text-gray-400"></i>
+            <span>Otlabel Studio Visual</span>
+          </span>
         </div>
-        <div class="text-right whitespace-nowrap pl-1">
-          <span class="text-xs sm:text-sm font-black text-gray-900">${p.price > 0 ? p.price.toLocaleString() + '원' : '가격 미정'}</span>
+
+        <!-- 스튜디오 실루엣 SVG 일러스트 -->
+        <div class="w-full h-36 flex items-center justify-center pt-5 pb-1 px-3 transition-transform duration-300 group-hover:scale-[1.03]">
+          ${visualSVG}
+        </div>
+
+        <!-- 하단: 원단 주요 혼용률 미니 그래픽 투톤/멀티톤 프로그레스 바 -->
+        <div class="px-3 py-1.5 bg-white/95 backdrop-blur-xs border-t border-gray-100/90">
+          <div class="flex items-center justify-between text-[10px] font-bold text-gray-600 mb-1">
+            <span class="flex items-center gap-1">
+              <i class="fa-solid fa-layer-group text-[9px] text-indigo-500"></i>
+              <span>원단 주요 구성</span>
+            </span>
+            <span class="text-gray-700 font-extrabold text-[10px] truncate max-w-[140px]">${fiberSummary}</span>
+          </div>
+          <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-200/50">
+            ${fiberMiniBar}
+          </div>
         </div>
       </div>
 
-      <!-- 소재 점수 직관적 게이지 바 및 혼용률 배지 -->
-      <div class="my-3 bg-gray-50/90 rounded-xl p-3 border border-gray-100 space-y-2">
-        <div class="flex justify-between items-center text-xs">
-          <span class="text-[11px] font-bold text-gray-700 flex items-center gap-1">
-            <i class="fa-solid fa-gauge-high text-indigo-500 text-[10px]"></i>
-            소재 환산 지표
-          </span>
-          <div class="flex items-center gap-1">
-            <span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">공식몰 표기 기준</span>
-            <span class="text-sm font-black ${scoreColor}">${p.score}<span class="text-[10px] text-gray-400 font-normal">/100점</span></span>
+      <!-- 브랜드, 카테고리, 가성비, 상품명, 가격 -->
+      <div>
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeBg}">${safeBrand}</span>
+              ${categoryBadge}
+              <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">가성비 ${p.costPerf || 0} pt</span>
+              ${p.analysis?.grade ? `<span class="text-[10px] text-gray-500 font-medium">${escapeHTML(p.analysis.grade)}</span>` : ''}
+            </div>
+            <h3 class="text-xs sm:text-sm font-extrabold text-gray-900 leading-snug line-clamp-2 break-keep">${safeName}</h3>
+          </div>
+          <div class="text-right whitespace-nowrap pl-1">
+            <span class="text-xs sm:text-sm font-black text-gray-900">${(p.price || 0) > 0 ? p.price.toLocaleString() + '원' : '가격 미정'}</span>
           </div>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
-          <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${p.score}%"></div>
-        </div>
-        <div class="pt-1 space-y-1.5">
-          <div class="flex flex-wrap gap-1.5">${componentChips}</div>
-          <p class="text-[11px] text-gray-600 leading-snug break-words break-keep line-clamp-2">
-            <span class="font-semibold text-gray-700">공식 표기 케어라벨:</span> ${safeFabric}
-          </p>
+
+        <!-- 소재 점수 직관적 게이지 바 및 혼용률 배지 -->
+        <div class="my-3 bg-gray-50/90 rounded-xl p-3 border border-gray-100 space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+              <i class="fa-solid fa-gauge-high text-indigo-500 text-[10px]"></i>
+              소재 환산 지표
+            </span>
+            <div class="flex items-center gap-1">
+              <span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">공식몰 표기 기준</span>
+              <span class="text-sm font-black ${scoreColor}">${scoreVal}<span class="text-[10px] text-gray-400 font-normal">/100점</span></span>
+            </div>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+            <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${scoreVal}%"></div>
+          </div>
+          <div class="pt-1 space-y-1.5">
+            <div class="flex flex-wrap gap-1.5">${componentChips}</div>
+            <p class="text-[11px] text-gray-600 leading-snug break-words break-keep line-clamp-2">
+              <span class="font-semibold text-gray-700">공식 표기 케어라벨:</span> ${safeFabric}
+            </p>
+          </div>
         </div>
       </div>
 
       <!-- 하단 버튼: [공식몰 바로가기 ↗] + [맞대결 담기] -->
-      <div class="flex items-center gap-2 pt-1">
+      <div class="flex items-center gap-2 pt-1 mt-auto">
         <button onclick="handleOutboundClick('${jsBrand}','${jsName}','${jsLink}')"
            class="flex-1 py-2 px-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1 active:scale-95 text-center cursor-pointer min-w-0" title="해당 브랜드 공식 온라인몰 또는 판매처로 이동합니다.">
           <span class="truncate">공식몰 바로가기</span>
@@ -1063,12 +1545,31 @@ function updateCompareUI() {
   if (badge) badge.innerText = compareList.length;
   if (bottomCount) bottomCount.innerText = compareList.length;
 
+  // 모바일 하단 비교 트레이 업데이트 (브랜드 칩 & 선택 상태)
   const bottomBar = document.getElementById("compare-bottom-bar");
+  const previewBox = document.getElementById("bottom-bar-items-preview");
   if (bottomBar) {
     if (compareList.length > 0) {
       bottomBar.classList.remove("hidden");
     } else {
       bottomBar.classList.add("hidden");
+    }
+  }
+
+  if (previewBox) {
+    if (compareList.length === 0) {
+      previewBox.innerHTML = `<span>맞대결 상품 선택 중</span>`;
+    } else if (compareList.length === 1) {
+      previewBox.innerHTML = `
+        <span class="bg-indigo-900/80 text-indigo-200 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-[100px] border border-indigo-700/50">${escapeHTML(compareList[0].brand)}</span>
+        <span class="text-[10px] text-gray-400 font-medium truncate">1개 선택됨 (+1개 필요)</span>
+      `;
+    } else {
+      previewBox.innerHTML = `
+        <span class="bg-indigo-900/80 text-indigo-200 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-[76px] border border-indigo-700/50">${escapeHTML(compareList[0].brand)}</span>
+        <span class="text-[10px] font-extrabold text-indigo-400 shrink-0">vs</span>
+        <span class="bg-emerald-950/80 text-emerald-300 px-2 py-0.5 rounded text-[11px] font-bold truncate max-w-[76px] border border-emerald-700/50">${escapeHTML(compareList[1].brand)}</span>
+      `;
     }
   }
 
@@ -1080,60 +1581,103 @@ function updateCompareUI() {
       shareBtn.classList.add("hidden");
     }
   }
+
+  // PC 우측 1:1 실시간 스펙 비교 대시보드 (Split-View) 실시간 동기화
+  updateDesktopCompareDashboard();
+}
+
+// PC 1:1 실시간 스펙 대조 대시보드 렌더러
+function updateDesktopCompareDashboard() {
+  const desktopBox = document.getElementById("desktop-compare-content");
+  if (!desktopBox) return;
+  desktopBox.innerHTML = generateCompareHTML();
 }
 
 // =============================================================
-// 12. 1:1 맞대결 모달 (가격 차이, 혼용률 수치 강조, 공식몰 링크)
+// 12. 1:1 맞대결 스펙 HTML 생성 엔진 (모바일 바텀시트 & PC Split-View 공용)
 // =============================================================
-function openModal() {
-  const modal = document.getElementById("compare-modal");
-  const content = document.getElementById("modal-content");
-  const shareBtn = document.getElementById("modal-share-btn");
-  if (!modal || !content) return;
-
-  if (compareList.length === 2 && shareBtn) {
-    shareBtn.classList.remove("hidden");
-  } else if (shareBtn) {
-    shareBtn.classList.add("hidden");
-  }
-
+function generateCompareHTML() {
   if (compareList.length === 0) {
-    content.innerHTML = `
-      <div class="text-center py-12 space-y-2">
-        <i class="fa-solid fa-scale-unbalanced text-3xl text-gray-300"></i>
-        <p class="text-xs font-bold text-gray-700">비교함에 담긴 상품이 없습니다.</p>
-        <p class="text-[11px] text-gray-400">상품 카드에서 [맞대결 담기]를 눌러 두 상품을 골라보세요!</p>
+    return `
+      <div class="text-center py-10 px-4 space-y-3 bg-white rounded-2xl border border-gray-200/90 shadow-2xs">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shadow-xs">
+          <i class="fa-solid fa-scale-unbalanced"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-gray-800">1:1 실시간 맞대결 대기 중</h4>
+          <p class="text-[11px] text-gray-500 mt-1 leading-relaxed">
+            상품 카드의 <strong>[맞대결 담기]</strong> 버튼을 눌러<br>
+            두 상품의 혼용률과 가격차를 즉시 대조해 보세요!
+          </p>
+        </div>
+        <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50/80 px-2.5 py-1 rounded-full border border-indigo-100">
+          <i class="fa-solid fa-lightbulb text-amber-500"></i>
+          <span>동일 카테고리(예: 티셔츠 vs 티셔츠) 대조 권장</span>
+        </div>
       </div>
     `;
   } else if (compareList.length === 1) {
     const item = compareList[0];
-    const safeBrand = escapeHTML(item.brand);
-    const safeName = escapeHTML(item.name);
-    const safeFabric = escapeHTML(item.fabric);
-    const jsBrand = escapeJS(item.brand);
-    const jsName = escapeJS(item.name);
+    if (!item.analysis) {
+      item.analysis = analyzeFabricEngine(item.fabric || "");
+      item.score = item.analysis.score;
+      item.costPerf = calculateCostPerformance(item.score, item.price || 0);
+    }
+    const safeBrand = escapeHTML(item.brand || "기타");
+    const safeName = escapeHTML(item.name || "의류");
+    const safeFabric = escapeHTML(item.fabric || "상세 라벨 확인 권장");
+    const jsBrand = escapeJS(item.brand || "");
+    const jsName = escapeJS(item.name || "");
     const jsLink = escapeJS(item.link || "#");
 
-    content.innerHTML = `
-      <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-indigo-900 text-xs flex items-center gap-2">
+    const itemBrandStyle = getBrandStyle(item.brand);
+    const itemVisualSVG = getCategoryVisualSVG(item.category, item.brand, item.fabric, item.analysis, { size: "modal", name: item.name });
+    const itemFiberSummary = getFabricSummary(item.analysis);
+    const itemMiniBar = getFabricMiniProgressBar(item.analysis);
+
+    return `
+      <div class="bg-indigo-50/90 border border-indigo-100 rounded-xl p-3 text-indigo-900 text-xs flex items-center gap-2">
         <i class="fa-solid fa-circle-question text-indigo-600 text-sm shrink-0"></i>
         <span>상대할 <strong>두 번째 상품</strong>을 목록에서 추가로 선택해주세요!</span>
       </div>
 
-      <div class="border border-indigo-200 rounded-2xl p-3 sm:p-4 bg-white shadow-sm mt-3 space-y-3">
+      <div class="border border-indigo-200 rounded-2xl p-3 sm:p-4 bg-white shadow-xs space-y-3 mt-3">
+        <!-- 1개 선택 시 스튜디오 비주얼 쇼케이스 썸네일 -->
+        <div class="relative w-full rounded-xl overflow-hidden mb-2 bg-gradient-to-br ${itemBrandStyle.bgGradient} border border-gray-100 shadow-2xs group">
+          <div class="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black text-white shadow-xs" style="background-color: ${itemBrandStyle.primary}">
+              <span class="w-1.5 h-1.5 rounded-full border border-white/40" style="background-color: ${itemBrandStyle.accent}"></span>
+              <span>${safeBrand}</span>
+            </span>
+            <span class="text-[9px] font-bold text-gray-500 bg-white/95 px-2 py-0.5 rounded-full border border-gray-200/70 shadow-2xs">Otlabel Studio Visual</span>
+          </div>
+          <div class="w-full h-32 sm:h-36 flex items-center justify-center pt-5 pb-1 px-3">
+            ${itemVisualSVG}
+          </div>
+          <div class="px-2.5 py-1.5 bg-white/95 border-t border-gray-100">
+            <div class="flex justify-between items-center text-[10px] font-bold text-gray-600 mb-0.5">
+              <span>원단 주요 구성</span>
+              <span class="text-gray-700 font-extrabold text-[10px] truncate max-w-[140px]">${itemFiberSummary}</span>
+            </div>
+            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+              ${itemMiniBar}
+            </div>
+          </div>
+        </div>
+
         <div class="flex justify-between items-start gap-2">
           <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[120px]">${safeBrand}</span>
-          <span class="text-xs font-black text-gray-900 whitespace-nowrap">${item.price > 0 ? item.price.toLocaleString() + '원' : '가격 미정'}</span>
+          <span class="text-xs font-black text-gray-900 whitespace-nowrap">${(item.price || 0) > 0 ? item.price.toLocaleString() + '원' : '가격 미정'}</span>
         </div>
         <h4 class="text-xs font-bold text-gray-900 break-keep">${safeName}</h4>
         
         <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-1.5">
           <div class="flex justify-between text-[11px]">
             <span class="text-gray-500 font-semibold">소재 퀄리티 점수</span>
-            <span class="font-black text-indigo-600">${item.score}점</span>
+            <span class="font-black text-indigo-600">${item.score || 0}점</span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-indigo-600 h-2 rounded-full" style="width: ${item.score}%"></div>
+            <div class="bg-indigo-600 h-2 rounded-full" style="width: ${item.score || 0}%"></div>
           </div>
           <p class="text-[11px] text-gray-700 pt-1 font-medium break-words break-keep">${safeFabric}</p>
         </div>
@@ -1143,37 +1687,60 @@ function openModal() {
           <span class="truncate">공식몰에서 실물 및 상세 보기</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500 shrink-0"></i>
         </button>
+        <p class="text-[9.5px] text-gray-400 text-center leading-tight mt-2">
+          * 본 이미지 및 도식은 케어라벨 소재 정보 이해를 돕기 위한 Otlabel 자체 제작 참고 그래픽이며, 실제 디자인·색상은 공식 온라인몰 상세페이지를 확인해 주세요.
+        </p>
       </div>
     `;
   } else {
     const [a, b] = compareList;
-    const priceDiff = Math.abs(a.price - b.price);
-    const scoreDiff = Math.abs(a.score - b.score);
-    const cheaper = a.price < b.price ? a : (a.price > b.price ? b : null);
-    const betterFabric = a.score > b.score ? a : (a.score < b.score ? b : null);
-    const betterCostPerf = a.costPerf > b.costPerf ? a : (a.costPerf < b.costPerf ? b : null);
+    if (!a.analysis) {
+      a.analysis = analyzeFabricEngine(a.fabric || "");
+      a.score = a.analysis.score;
+      a.costPerf = calculateCostPerformance(a.score, a.price || 0);
+    }
+    if (!b.analysis) {
+      b.analysis = analyzeFabricEngine(b.fabric || "");
+      b.score = b.analysis.score;
+      b.costPerf = calculateCostPerformance(b.score, b.price || 0);
+    }
 
-    const aBadges = a.analysis?.components?.length > 0
+    const priceDiff = Math.abs((a.price || 0) - (b.price || 0));
+    const scoreDiff = Math.abs((a.score || 0) - (b.score || 0));
+    const cheaper = (a.price || 0) < (b.price || 0) ? a : ((a.price || 0) > (b.price || 0) ? b : null);
+    const betterFabric = (a.score || 0) > (b.score || 0) ? a : ((a.score || 0) < (b.score || 0) ? b : null);
+    const betterCostPerf = (a.costPerf || 0) > (b.costPerf || 0) ? a : ((a.costPerf || 0) < (b.costPerf || 0) ? b : null);
+
+    const aBadges = (a.analysis?.components?.length > 0)
       ? a.analysis.components.slice(0, 3).map(c => `<span class="badge-ratio text-[10px] font-bold bg-indigo-50 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200">${escapeHTML(c.name)} ${c.percent}%</span>`).join(" ")
       : `<span class="text-[10px] text-gray-500">${escapeHTML(a.analysis?.keySummary || "라벨 확인 권장")}</span>`;
 
-    const bBadges = b.analysis?.components?.length > 0
+    const bBadges = (b.analysis?.components?.length > 0)
       ? b.analysis.components.slice(0, 3).map(c => `<span class="badge-ratio text-[10px] font-bold bg-indigo-50 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200">${escapeHTML(c.name)} ${c.percent}%</span>`).join(" ")
       : `<span class="text-[10px] text-gray-500">${escapeHTML(b.analysis?.keySummary || "라벨 확인 권장")}</span>`;
 
-    const aSafeBrand = escapeHTML(a.brand);
-    const aSafeName = escapeHTML(a.name);
-    const aSafeFabric = escapeHTML(a.fabric);
-    const aJsBrand = escapeJS(a.brand);
-    const aJsName = escapeJS(a.name);
+    const aSafeBrand = escapeHTML(a.brand || "기타");
+    const aSafeName = escapeHTML(a.name || "의류");
+    const aSafeFabric = escapeHTML(a.fabric || "상세 라벨 확인 권장");
+    const aJsBrand = escapeJS(a.brand || "");
+    const aJsName = escapeJS(a.name || "");
     const aJsLink = escapeJS(a.link || "#");
 
-    const bSafeBrand = escapeHTML(b.brand);
-    const bSafeName = escapeHTML(b.name);
-    const bSafeFabric = escapeHTML(b.fabric);
-    const bJsBrand = escapeJS(b.brand);
-    const bJsName = escapeJS(b.name);
+    const bSafeBrand = escapeHTML(b.brand || "기타");
+    const bSafeName = escapeHTML(b.name || "의류");
+    const bSafeFabric = escapeHTML(b.fabric || "상세 라벨 확인 권장");
+    const bJsBrand = escapeJS(b.brand || "");
+    const bJsName = escapeJS(b.name || "");
     const bJsLink = escapeJS(b.link || "#");
+
+    const aBrandStyle = getBrandStyle(a.brand);
+    const bBrandStyle = getBrandStyle(b.brand);
+    const aVisualSVG = getCategoryVisualSVG(a.category, a.brand, a.fabric, a.analysis, { size: "modal", name: a.name });
+    const bVisualSVG = getCategoryVisualSVG(b.category, b.brand, b.fabric, b.analysis, { size: "modal", name: b.name });
+    const aFiberSummary = getFabricSummary(a.analysis);
+    const bFiberSummary = getFabricSummary(b.analysis);
+    const aMiniBar = getFabricMiniProgressBar(a.analysis);
+    const bMiniBar = getFabricMiniProgressBar(b.analysis);
 
     // 가격 차이 안내 문구 (공식 정가 기준 객관적 표기)
     let priceComparisonBadge = "";
@@ -1185,7 +1752,7 @@ function openModal() {
       </span>`;
     }
 
-    content.innerHTML = `
+    return `
       <!-- 가격 차이 하이라이트 배너 -->
       <div class="p-2.5 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-emerald-50 border border-indigo-100 flex items-center justify-between gap-1">
         <div class="text-[11px] font-bold text-gray-800 flex items-center gap-1.5 shrink-0">
@@ -1195,17 +1762,39 @@ function openModal() {
         <div class="text-right min-w-0">${priceComparisonBadge}</div>
       </div>
 
-      <!-- 1:1 대결 상단 카드 (2열 - 모바일 360px 대응 min-w-0 적용) -->
-      <div class="grid grid-cols-2 gap-2 text-center">
+      <!-- 1:1 대결 상단 카드 (2열 - 모바일 360px 및 PC Split-View 대응) -->
+      <div class="grid grid-cols-2 gap-2 sm:gap-3 text-center">
         <!-- A 상품 -->
         <div class="bg-white p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between min-w-0 ${betterFabric?.id === a.id ? 'border-indigo-600 ring-2 ring-indigo-100 shadow-sm' : 'border-gray-200'}">
+          <!-- A Visual Studio Artwork Showcase -->
+          <div class="relative w-full rounded-xl overflow-hidden mb-2 bg-gradient-to-br ${aBrandStyle.bgGradient} border border-gray-100 shadow-2xs">
+            <div class="absolute top-1.5 left-1.5 flex items-center gap-1 z-10 pointer-events-none">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black text-white shadow-2xs" style="background-color: ${aBrandStyle.primary}">
+                <span class="w-1 h-1 rounded-full border border-white/40" style="background-color: ${aBrandStyle.accent}"></span>
+                <span class="truncate max-w-[65px] sm:max-w-[90px]">${aSafeBrand}</span>
+              </span>
+            </div>
+            <div class="w-full h-28 sm:h-32 flex items-center justify-center pt-4 pb-1 px-1">
+              ${aVisualSVG}
+            </div>
+            <div class="px-2 py-1 bg-white/95 border-t border-gray-100">
+              <div class="flex justify-between items-center text-[9px] font-bold text-gray-500 mb-0.5">
+                <span>혼용 구성</span>
+                <span class="text-gray-700 font-extrabold truncate max-w-[80px] sm:max-w-[100px]">${aFiberSummary}</span>
+              </div>
+              <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                ${aMiniBar}
+              </div>
+            </div>
+          </div>
+
           <div class="min-w-0">
             <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
               <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[76px] sm:max-w-[100px]">${aSafeBrand}</span>
               ${betterFabric?.id === a.id ? '<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 우세</span>' : ''}
             </div>
             <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2 text-left leading-tight break-words break-keep">${aSafeName}</h4>
-            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${a.price > 0 ? a.price.toLocaleString() + '원' : '가격 미정'}</p>
+            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${(a.price || 0) > 0 ? a.price.toLocaleString() + '원' : '가격 미정'}</p>
             ${cheaper?.id === a.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(정가 -${priceDiff.toLocaleString()}원 차이)</p>` : ''}
           </div>
           <button onclick="handleOutboundClick('${aJsBrand}','${aJsName}','${aJsLink}')"
@@ -1217,13 +1806,35 @@ function openModal() {
         
         <!-- B 상품 -->
         <div class="bg-white p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between min-w-0 ${betterFabric?.id === b.id ? 'border-indigo-600 ring-2 ring-indigo-100 shadow-sm' : 'border-gray-200'}">
+          <!-- B Visual Studio Artwork Showcase -->
+          <div class="relative w-full rounded-xl overflow-hidden mb-2 bg-gradient-to-br ${bBrandStyle.bgGradient} border border-gray-100 shadow-2xs">
+            <div class="absolute top-1.5 left-1.5 flex items-center gap-1 z-10 pointer-events-none">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black text-white shadow-2xs" style="background-color: ${bBrandStyle.primary}">
+                <span class="w-1 h-1 rounded-full border border-white/40" style="background-color: ${bBrandStyle.accent}"></span>
+                <span class="truncate max-w-[65px] sm:max-w-[90px]">${bSafeBrand}</span>
+              </span>
+            </div>
+            <div class="w-full h-28 sm:h-32 flex items-center justify-center pt-4 pb-1 px-1">
+              ${bVisualSVG}
+            </div>
+            <div class="px-2 py-1 bg-white/95 border-t border-gray-100">
+              <div class="flex justify-between items-center text-[9px] font-bold text-gray-500 mb-0.5">
+                <span>혼용 구성</span>
+                <span class="text-gray-700 font-extrabold truncate max-w-[80px] sm:max-w-[100px]">${bFiberSummary}</span>
+              </div>
+              <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                ${bMiniBar}
+              </div>
+            </div>
+          </div>
+
           <div class="min-w-0">
             <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
               <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[76px] sm:max-w-[100px]">${bSafeBrand}</span>
               ${betterFabric?.id === b.id ? '<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 우세</span>' : ''}
             </div>
             <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2 text-left leading-tight break-words break-keep">${bSafeName}</h4>
-            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${b.price > 0 ? b.price.toLocaleString() + '원' : '가격 미정'}</p>
+            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${(b.price || 0) > 0 ? b.price.toLocaleString() + '원' : '가격 미정'}</p>
             ${cheaper?.id === b.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(정가 -${priceDiff.toLocaleString()}원 차이)</p>` : ''}
           </div>
           <button onclick="handleOutboundClick('${bJsBrand}','${bJsName}','${bJsLink}')"
@@ -1234,21 +1845,26 @@ function openModal() {
         </div>
       </div>
 
+      <!-- 비주얼 그래픽 법적 참고 고지 -->
+      <p class="text-[9.5px] text-gray-400 text-center leading-tight -mt-1 mb-1">
+        * 본 이미지 및 도식은 케어라벨 소재 정보 이해를 돕기 위한 Otlabel 자체 제작 참고 그래픽이며, 실제 디자인·색상은 공식 온라인몰 상세페이지를 확인해 주세요.
+      </p>
+
       <!-- 정밀 비교 바 및 수치 대조 -->
       <div class="bg-gray-50 rounded-2xl p-3 sm:p-3.5 space-y-3.5 border border-gray-200">
         <!-- 소재 점수 맞대결 게이지 -->
         <div>
           <div class="flex justify-between items-center text-[11px] font-bold text-gray-700 mb-1.5 gap-1">
-            <span class="truncate max-w-[90px] sm:max-w-[120px] ${betterFabric?.id === a.id ? 'text-indigo-600 font-black' : ''}">${aSafeBrand} (${a.score}점)</span>
+            <span class="truncate max-w-[90px] sm:max-w-[120px] ${betterFabric?.id === a.id ? 'text-indigo-600 font-black' : ''}">${aSafeBrand} (${a.score || 0}점)</span>
             <span class="text-[10px] text-gray-400 font-semibold shrink-0">소재 지표 비교 (공식 표기 기준)</span>
-            <span class="truncate max-w-[90px] sm:max-w-[120px] text-right ${betterFabric?.id === b.id ? 'text-indigo-600 font-black' : ''}">(${b.score}점) ${bSafeBrand}</span>
+            <span class="truncate max-w-[90px] sm:max-w-[120px] text-right ${betterFabric?.id === b.id ? 'text-indigo-600 font-black' : ''}">(${b.score || 0}점) ${bSafeBrand}</span>
           </div>
           <div class="grid grid-cols-2 gap-1 h-3">
             <div class="bg-gray-200 rounded-l-full overflow-hidden flex justify-end">
-              <div class="bg-indigo-600 h-full rounded-l-full transition-all duration-500" style="width: ${a.score}%"></div>
+              <div class="bg-indigo-600 h-full rounded-l-full transition-all duration-500" style="width: ${a.score || 0}%"></div>
             </div>
             <div class="bg-gray-200 rounded-r-full overflow-hidden flex justify-start">
-              <div class="bg-indigo-600 h-full rounded-r-full transition-all duration-500" style="width: ${b.score}%"></div>
+              <div class="bg-indigo-600 h-full rounded-r-full transition-all duration-500" style="width: ${b.score || 0}%"></div>
             </div>
           </div>
         </div>
@@ -1275,12 +1891,12 @@ function openModal() {
         <div class="pt-2 border-t border-gray-200 flex justify-around text-center">
           <div>
             <span class="text-[10px] text-gray-400 block font-medium">가성비 환산 지수 (참고용)</span>
-            <span class="text-xs font-black ${betterCostPerf?.id === a.id ? 'text-indigo-600' : 'text-gray-900'}">${a.costPerf} pt</span>
+            <span class="text-xs font-black ${betterCostPerf?.id === a.id ? 'text-indigo-600' : 'text-gray-900'}">${a.costPerf || 0} pt</span>
           </div>
           <div class="w-px bg-gray-200 h-6"></div>
           <div>
             <span class="text-[10px] text-gray-400 block font-medium">가성비 환산 지수 (참고용)</span>
-            <span class="text-xs font-black ${betterCostPerf?.id === b.id ? 'text-indigo-600' : 'text-gray-900'}">${b.costPerf} pt</span>
+            <span class="text-xs font-black ${betterCostPerf?.id === b.id ? 'text-indigo-600' : 'text-gray-900'}">${b.costPerf || 0} pt</span>
           </div>
         </div>
 
@@ -1323,7 +1939,27 @@ function openModal() {
       </div>
     `;
   }
+}
 
+function openModal() {
+  const modal = document.getElementById("compare-modal");
+  const content = document.getElementById("modal-content");
+  const shareBtn = document.getElementById("modal-share-btn");
+  if (!modal || !content) return;
+
+  // PC 모달 너비 반응형 확장 (Split-View 최적화)
+  const dialogBox = modal.querySelector(".max-w-md") || modal.firstElementChild;
+  if (dialogBox && !dialogBox.classList.contains("sm:max-w-xl")) {
+    dialogBox.classList.add("sm:max-w-xl", "md:max-w-2xl");
+  }
+
+  if (compareList.length === 2 && shareBtn) {
+    shareBtn.classList.remove("hidden");
+  } else if (shareBtn) {
+    shareBtn.classList.add("hidden");
+  }
+
+  content.innerHTML = generateCompareHTML();
   modal.classList.remove("hidden");
 }
 
@@ -1489,6 +2125,14 @@ function setupEventListeners() {
     openModal();
   });
 
+  // PC Split-View 대시보드 비우기 버튼
+  document.getElementById("desktop-clear-btn")?.addEventListener("click", () => {
+    compareList = [];
+    updateCompareUI();
+    renderProductCards();
+    showToast("맞대결 리스트를 비웠습니다.");
+  });
+
   document.getElementById("compare-modal")?.addEventListener("click", (e) => {
     if (e.target.id === "compare-modal") closeModal();
   });
@@ -1547,6 +2191,9 @@ function setupEventListeners() {
 // 15. 앱 시작
 // =============================================================
 document.addEventListener("DOMContentLoaded", () => {
+  setupResponsivePCView();
+  window.addEventListener("resize", setupResponsivePCView);
   setupEventListeners();
+  updateCompareUI();
   initData();
 });

@@ -1,0 +1,36 @@
+{
+  "name": "옷라벨 - SPA 케어라벨 1:1 비교",
+  "short_name": "옷라벨",
+  "description": "SPA 브랜드 의류 케어라벨 소재 & 혼용률 1:1 정밀 대조 및 가성비 분석 서비스",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "assets/icons/favicon.png",
+      "sizes": "64x64 32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

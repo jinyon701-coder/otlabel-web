@@ -15,7 +15,7 @@
   // -------------------------------------------------------------
   // 상수 및 상태 정의
   // -------------------------------------------------------------
-  const OFFICIAL_EMAIL = 'otlabel.official@gmail.com';
+  const OFFICIAL_EMAIL = 'kimjy89701@gmail.com';
 
   const FAQ_DATA = {
     composition: {
@@ -64,7 +64,8 @@
 • 오프라인 매장 실물 케어라벨과 표기가 다른가요?
 • 신규 등록을 원하는 인기 아이템이 있으신가요?
 
-상단의 **[✍️ 오류 제보/문의]** 탭을 클릭하시거나 아래 버튼을 누르시면 제보 접수 폼으로 바로 이동합니다. 접수된 제보는 검증 후 데이터베이스에 즉각 반영됩니다.`,
+• **공식 제보 이메일**: \`${OFFICIAL_EMAIL}\`
+상단의 **[✍️ 오류 제보/문의]** 탭을 클릭하시거나 공식 이메일(\`${OFFICIAL_EMAIL}\`)로 실물 라벨 사진과 내용을 보내주시면 검증 후 데이터베이스에 즉각 반영됩니다.`,
       actionBtn: { text: '✍️ 오류 제보 폼 열기', action: 'openReportTab' }
     },
     partnership: {
@@ -78,9 +79,9 @@
 • **주요 혜택**:
   - 케어라벨 스펙 기반 1:1 맞대결 큐레이션 노출
   - 구매 전환율이 높은 공식 스토어 아웃바운드 링크 연결
-• **파트너십 전용 창구**: \`${OFFICIAL_EMAIL}\`
+• **브랜드 제휴 전용 창구**: \`${OFFICIAL_EMAIL}\`
 
-브랜드 소개서 또는 상품 시트 링크를 이메일로 보내주시면 담당자가 영업일 기준 24시간 내 검토 후 회신드립니다.`
+브랜드 소개서 또는 상품 시트 링크를 공식 이메일(\`${OFFICIAL_EMAIL}\`)로 보내주시면 담당자가 영업일 기준 24시간 내 신속히 검토 후 회신드립니다.`
     }
   };
 
@@ -478,6 +479,7 @@
       this.cacheDOM();
       this.bindEvents();
       this.initTooltip();
+      this.setupBottomBarObserver();
     }
 
     cacheDOM() {
@@ -637,6 +639,53 @@
       } catch (err) {
         // Safe storage fallback
       }
+    }
+
+    setupBottomBarObserver() {
+      if (!this.anchor) return;
+
+      const updatePosition = () => {
+        const bottomBar = document.getElementById('compare-bottom-bar') ||
+                          document.querySelector('[id*="compare-bottom"]') ||
+                          document.querySelector('[id*="compare-tray"]') ||
+                          document.querySelector('.compare-tray');
+
+        let isActive = false;
+        if (bottomBar) {
+          const style = window.getComputedStyle(bottomBar);
+          const isHiddenClass = bottomBar.classList.contains('hidden');
+          const isDisplayNone = style.display === 'none';
+          const isVisibilityHidden = style.visibility === 'hidden';
+          const hasHeight = bottomBar.offsetHeight > 0;
+          isActive = !isHiddenClass && !isDisplayNone && !isVisibilityHidden && hasHeight;
+        }
+
+        if (isActive) {
+          this.anchor.classList.add('has-bottom-tray', 'has-bottom-bar');
+        } else {
+          this.anchor.classList.remove('has-bottom-tray', 'has-bottom-bar');
+        }
+      };
+
+      // 초기 실행
+      updatePosition();
+
+      // MutationObserver로 하단 바 DOM 상태 및 클래스 변화 실시간 감지
+      try {
+        const observer = new MutationObserver(() => {
+          updatePosition();
+        });
+
+        observer.observe(document.body, {
+          attributes: true,
+          subtree: true,
+          attributeFilter: ['class', 'style', 'hidden']
+        });
+      } catch (e) {
+        console.warn('[Otlabel CS] MutationObserver setup failed', e);
+      }
+
+      window.addEventListener('resize', updatePosition);
     }
 
     togglePopup() {
@@ -904,17 +953,25 @@
         String(now.getHours()).padStart(2, '0') + ':' +
         String(now.getMinutes()).padStart(2, '0');
 
-      const text = `[옷라벨 데이터 수정 및 제보 요청]
+      // 브라우저 및 디바이스 환경 정보 수집
+      const userAgent = (typeof navigator !== 'undefined' && navigator.userAgent) || 'Unknown';
+      const screenInfo = (typeof window !== 'undefined' && window.innerWidth && window.innerHeight)
+        ? `${window.innerWidth}x${window.innerHeight}`
+        : 'Unknown';
+      const browserInfo = `${userAgent} (화면: ${screenInfo})`;
+
+      const text = `[Otlabel 데이터 수정 및 제보 요청]
 ----------------------------------------
 ■ 제보 유형: ${type}
 ■ 대상 상품명/브랜드: ${product}
 ■ 상세 내용:
 ${details}
+■ 브라우저/환경: ${browserInfo}
 ■ 제보 일시: ${timestamp}
 ----------------------------------------
-(옷라벨 구글 스프레드시트 검증 및 데이터베이스 반영 요청)`;
+(Otlabel 구글 스프레드시트 검증 및 데이터베이스 반영 요청)`;
 
-      return { type, product, details, text, timestamp };
+      return { type, product, details, text, timestamp, browserInfo };
     }
 
     async copyReportContent() {
@@ -949,7 +1006,7 @@ ${details}
         // Safe copy
       }
 
-      const subject = encodeURIComponent(`[옷라벨 오류제보] ${payload.type} - ${payload.product}`);
+      const subject = encodeURIComponent(`[Otlabel 제보] ${payload.type} - ${payload.product}`);
       const body = encodeURIComponent(payload.text);
       const mailtoUrl = `mailto:${OFFICIAL_EMAIL}?subject=${subject}&body=${body}`;
 

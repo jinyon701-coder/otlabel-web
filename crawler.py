@@ -33,28 +33,48 @@ WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzsBa5RxgQ9MxM1Ln-FM0VHGe
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1TohouE0HOPXrsH-k5A55Twv3lqsc7bHIH7m74SWRJZ8/export?format=csv"
 FALLBACK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT-_JrM639eTC06eeehdde2pEcvGo4cuxFGNdoIEXgFJjA0Ba5B_4S3FTMmhRympEOmcTojaqn5LOWP/pub?output=csv"
 
-# 기본 수집 대상 인기 상품 URL 목록
+# 기본 수집 대상 인기 상품 URL 목록 (검증된 대표 스테디셀러 URL)
 TARGET_URLS: List[str] = [
-    # 1. 무신사 스탠다드
+    # 1. 무신사 스탠다드 (Musinsa Standard)
     "https://www.musinsa.com/products/4356794",  # [시티 레저] 후디드 라이트 다운 재킷
     "https://www.musinsa.com/products/2081554",  # 릴렉스드 베이식 블레이저
     "https://www.musinsa.com/products/1551840",  # 테이퍼드 히든 밴딩 슬랙스
     "https://www.musinsa.com/products/996636",   # 캐시미어 블렌드 라운드 넥 니트
     "https://www.musinsa.com/products/3770428",  # 멜란지 마스터 스웨트셔츠
     
-    # 2. 스파오 (SPAO)
-    "https://www.spao.com/i/item?itemNo=2608016293&lowerVendNo=LV26000002&pageId=1795096632474&preCornerNo=R13720001_categoryItem",  # 씬라이트 시어 후드 재킷
-    "https://spao.com/product/%ED%81%B4%EB%9E%98%EC%8B%9D-%EC%98%A5%EC%8A%A4%ED%8F%AC%EB%93%9C-%EC%85%94%EC%8 warm/123/",
+    # 2. 스파오 (SPAO) - 최신 유효 스테디셀러 URL
+    "https://www.spao.com/i/item?itemNo=2608016293&lowerVendNo=LV26000002&pageId=1795096632474&preCornerNo=R13720001_categoryItem",  # [씬라이트] 여성 시어 후드 재킷
+    "https://spao.com/product/%ED%81%B4%EB%9E%98%EC%8B%9D-%EC%98%A5%EC%8A%A4%ED%8F%AC%EB%93%9C-%EC%85%94%EC%8A%B8/4735/",  # 클래식 옥스포드 셔츠
+    "https://spao.com/product/%EB%B2%A0%EC%9D%B4%EC%8B%9D-%ED%91%B8%ED%8D%BC-%ED%8C%A8%EB%94%A9/5820/",  # 베이직 푸퍼 패딩
     
-    # 3. 유니클로 (UNIQLO)
+    # 3. 유니클로 (UNIQLO) - 대표 스테디셀러 라인업
     "https://www.uniqlo.com/kr/ko/products/E422992-000/00",  # 수피마 코튼 크루넥T
     "https://www.uniqlo.com/kr/ko/products/E460322-000/00",  # 엑스트라 화인 메리노 크루넥 스웨터
     "https://www.uniqlo.com/kr/ko/products/E467027-000/00",  # 프리미엄 램스울 크루넥 스웨터
+    "https://www.uniqlo.com/kr/ko/products/E450251-000/00",  # 히트텍 크루넥T (9부)
+    "https://www.uniqlo.com/kr/ko/products/E462372-000/00",  # 스마트 앵클 팬츠
     
-    # 4. 탑텐 (TOPTEN10)
-    "https://topten.topten10mall.com/kr/front/goods/goodsDetail.do?goodsNo=MSF4TR1001",
-    "https://topten.topten10mall.com/kr/front/goods/goodsDetail.do?goodsNo=MSF4HD1001",
+    # 4. 탑텐 (TOPTEN10) - 대표 스테디셀러 라인업
+    "https://topten.topten10mall.com/kr/front/goods/goodsDetail.do?goodsNo=MSF4TR1001",  # 쿨에어 코튼 크루넥 반팔티
+    "https://topten.topten10mall.com/kr/front/goods/goodsDetail.do?goodsNo=MSF4HD1001",  # 헤비웨이트 후드 집업
+    "https://topten.topten10mall.com/kr/front/goods/goodsDetail.do?goodsNo=MSD4PP1001",  # 베이직 테이퍼드 슬랙스
 ]
+
+
+# 대표 섬유 키워드 (혼용률 텍스트 검증용)
+FIBER_KEYWORDS_RE = re.compile(
+    r"면|코튼|cotton|울|모|양모|wool|캐시미어|cashmere|폴리에스터|폴리|polyester|"
+    r"나일론|nylon|폴리우레탄|스판|spandex|모달|modal|텐셀|tencel|레이온|rayon|"
+    r"아크릴|acrylic|린넨|리넨|linen|마|실크|silk|다운|down|솜털|깃털|구스|덕|거위|오리|가죽|leather",
+    re.IGNORECASE
+)
+
+
+def sanitize_url(raw_url: str) -> str:
+    """공백 제거나 비정상 인코딩 방어 정리"""
+    if not raw_url:
+        return ""
+    return raw_url.strip().replace(" ", "%20")
 
 
 def determine_brand(url: str, title: str = "") -> str:
@@ -216,31 +236,71 @@ def parse_product_page(page, url: str) -> Optional[Dict[str, any]]:
                 page.wait_for_timeout(1000)
                 html = page.content()
                 soup = BeautifulSoup(html, "html.parser")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"무신사 아코디언 토글 생략: {e}")
 
-    # (1) 테이블 및 dl/dt/dd 구조 탐색
-    for row in soup.find_all(["tr", "li", "div", "dl"]):
-        txt = row.get_text(" ", strip=True)
-        if ("제품 소재" in txt or "소재" in txt or "혼용률" in txt or "겉감" in txt) and "%" in txt:
-            # 적정 길이의 소재 문구 포착
-            clean_txt = re.sub(r"\s+", " ", txt)
-            # 불필요한 레이블 접두어 분리
-            m = re.search(r"(?:제품\s*소재|소재|혼용률)\s*[:\s]?\s*(.+?)(?:색상|제조국|제조사|치수|세탁방법|$)", clean_txt)
-            if m:
-                candidate = m.group(1).strip()
-                if "%" in candidate and len(candidate) > 4:
-                    fabric = candidate
+    # 유니클로 상품 파싱 로직 정밀화: 소재/취급 아코디언 펼침 및 전용 파서 적용
+    if "uniqlo.com" in url or brand == "유니클로":
+        try:
+            # 1. 유니클로 소재/취급 아코디언 버튼 탐색 및 클릭
+            uniqlo_btn = page.locator("button, a, summary, [role='button'], dt").filter(
+                has_text=re.compile(r"소재\s*/?\s*취급|소재\s*정보|사양|소재|Care")
+            ).first
+            if uniqlo_btn.is_visible(timeout=2500):
+                uniqlo_btn.click(force=True)
+                page.wait_for_timeout(800)
+                html = page.content()
+                soup = BeautifulSoup(html, "html.parser")
+        except Exception as e:
+            logger.debug(f"유니클로 아코디언 클릭 시도 생략: {e}")
+
+        # 2. [소재] 태그 우선 포착 (일반 마케팅 설명문 배제)
+        # 예: [소재] [00 WHITE, 09 BLACK] 100% 면 [취급] 세탁기
+        m_uniqlo = re.search(r"\[소재\]\s*([^\[\n\r]+?)(?=\s*\[(?:취급|세탁|제조국|원산국)|$)", html)
+        if m_uniqlo:
+            cand = m_uniqlo.group(1).strip()
+            if "%" in cand and FIBER_KEYWORDS_RE.search(cand):
+                fabric = re.sub(r"\s+", " ", cand)
+                logger.info(f"  [유니클로] [소재] 태그 정밀 포착 성공: {fabric}")
+
+        # 3. [소재/취급] 블록 내 텍스트 정밀 탐색
+        if not fabric:
+            for el in soup.find_all(["dd", "div", "p", "li"]):
+                txt = el.get_text(" ", strip=True)
+                if ("[소재]" in txt or "소재/취급" in txt or "소재 :" in txt) and "%" in txt:
+                    sub = txt
+                    if "[소재]" in sub:
+                        sub = sub.split("[소재]")[-1]
+                    if "[취급]" in sub:
+                        sub = sub.split("[취급]")[0]
+                    clean_sub = re.sub(r"\s+", " ", sub).strip()
+                    if "%" in clean_sub and FIBER_KEYWORDS_RE.search(clean_sub) and len(clean_sub) < 250:
+                        fabric = clean_sub
+                        logger.info(f"  [유니클로] 소재/취급 블록 정밀 포착 성공: {fabric}")
+                        break
+
+    # (1) 일반 테이블 및 dl/dt/dd 구조 탐색 (무신사, 스파오, 탑텐 등)
+    if not fabric:
+        for row in soup.find_all(["tr", "li", "div", "dl"]):
+            txt = row.get_text(" ", strip=True)
+            if ("제품 소재" in txt or "소재" in txt or "혼용률" in txt or "겉감" in txt) and "%" in txt:
+                clean_txt = re.sub(r"\s+", " ", txt)
+                m = re.search(r"(?:제품\s*소재|소재|혼용률)\s*[:\s]?\s*(.+?)(?:색상|제조국|제조사|치수|세탁방법|$)", clean_txt)
+                if m:
+                    candidate = m.group(1).strip()
+                    if "%" in candidate and FIBER_KEYWORDS_RE.search(candidate) and len(candidate) > 4:
+                        fabric = candidate
+                        break
+                elif len(clean_txt) < 300 and "%" in clean_txt and FIBER_KEYWORDS_RE.search(clean_txt):
+                    fabric = clean_txt
                     break
-            elif len(clean_txt) < 300 and "%" in clean_txt:
-                fabric = clean_txt
-                break
 
-    # (2) 정규식 % 패턴 직접 검색 Fallback
+    # (2) 정규식 % 패턴 직접 검색 Fallback (섬유 키워드 매칭 보장)
     if not fabric:
         percent_matches = re.findall(r"([가-힣a-zA-Z\s]{2,15}\s*\d{1,3}\s*%)", html)
-        if percent_matches:
-            fabric = ", ".join([p.strip() for p in percent_matches[:5]])
+        valid_matches = [p.strip() for p in percent_matches if FIBER_KEYWORDS_RE.search(p)]
+        if valid_matches:
+            fabric = ", ".join(valid_matches[:5])
 
     invalid_keywords = ["blocked", "bad request", "server error", "찾을 수 없음", "추천 의류"]
     if not name or any(k in name.lower() for k in invalid_keywords) or price <= 0:
@@ -268,9 +328,10 @@ def run_crawler():
 
     existing_links = get_existing_links()
 
-    # 수집 대상 필터링 (중복 URL 제외)
-    pending_urls = [u for u in TARGET_URLS if u not in existing_links]
-    logger.info(f"수집 대상 총 {len(TARGET_URLS)}개 중 신규 수집 대상: {len(pending_urls)}개")
+    # 수집 대상 필터링 (URL 정제 및 중복 URL 제외)
+    sanitized_targets = [sanitize_url(u) for u in TARGET_URLS if sanitize_url(u)]
+    pending_urls = [u for u in sanitized_targets if u not in existing_links]
+    logger.info(f"수집 대상 총 {len(sanitized_targets)}개 중 신규 수집 대상: {len(pending_urls)}개")
 
     if not pending_urls:
         logger.info("새로 수집할 신규 상품이 없습니다. 작업을 종료합니다.")

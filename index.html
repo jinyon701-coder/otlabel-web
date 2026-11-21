@@ -4,34 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>옷라벨 - SPA 브랜드 소재 & 혼용률 1:1 맞대결 비교</title>
+  
+  <!-- Favicon & App Icons -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col items-center">
+<body class="bg-slate-100 text-gray-900 min-h-screen flex flex-col items-center">
 
-  <div class="w-full max-w-md bg-white min-h-screen shadow-xl relative flex flex-col">
+  <div class="app-shell w-full max-w-md lg:max-w-7xl bg-white min-h-screen shadow-2xl relative flex flex-col">
 
     <!-- 상단 헤더 -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-300">
-          <i class="fa-solid fa-tags text-sm"></i>
-        </div>
-        <div>
-          <h1 class="text-lg font-black tracking-tight text-gray-900 leading-none">옷라벨</h1>
-          <span class="text-[10px] text-indigo-600 font-semibold tracking-wide">SPA 케어라벨 정밀 1:1 비교</span>
-        </div>
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <a href="./" class="flex items-center space-x-2.5 group cursor-pointer" aria-label="옷라벨 홈">
+          <div class="w-9 h-9 rounded-xl overflow-hidden shadow-sm shadow-indigo-200 shrink-0 flex items-center justify-center bg-slate-900 border border-slate-800 transition-transform group-hover:scale-105">
+            <img src="favicon.svg" alt="옷라벨 로고" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-lg sm:text-xl font-black tracking-tight text-gray-900 leading-none">옷라벨</h1>
+              <span class="hidden sm:inline-block text-[10px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200">1:1 소재 비교</span>
+            </div>
+            <span class="text-[10px] sm:text-[11px] text-indigo-600 font-semibold tracking-wide block">SPA 케어라벨 정밀 1:1 비교</span>
+          </div>
+        </a>
       </div>
-      <button id="open-compare-btn" class="relative text-xs font-bold bg-gray-900 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 active:scale-95 transition-all shadow-sm hover:bg-black cursor-pointer">
-        <i class="fa-solid fa-scale-balanced text-indigo-400"></i>
-        <span>맞대결</span>
-        <span id="compare-badge" class="bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <span class="hidden xl:inline-flex items-center text-xs font-semibold text-gray-600 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
+          <i class="fa-solid fa-tags text-indigo-500 mr-1.5"></i>
+          <span>SPA 브랜드 공시 케어라벨 1:1 맞대결</span>
+        </span>
+        <button id="open-compare-btn" class="relative text-xs font-bold bg-gray-900 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 active:scale-95 transition-all shadow-sm hover:bg-black cursor-pointer">
+          <i class="fa-solid fa-scale-balanced text-indigo-400"></i>
+          <span>맞대결</span>
+          <span id="compare-badge" class="bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+        </button>
+      </div>
     </header>
 
-    <!-- 검색 & 필터 & 온디맨드 분석기 섹션 -->
-    <section class="p-4 border-b border-gray-100 space-y-3 bg-gray-50/70">
+    <!-- PC 웹 vs 모바일 분리 레이아웃 그리드 래퍼 -->
+    <div class="pc-split-layout lg:grid lg:grid-cols-12 lg:gap-6 flex-1 w-full">
+
+      <!-- 좌측 메인 카탈로그 & 필터 영역 -->
+      <div class="lg:col-span-7 xl:col-span-8 flex flex-col min-w-0">
+        <!-- 검색 & 필터 & 온디맨드 분석기 섹션 -->
+        <section class="p-4 sm:p-5 border-b border-gray-100 space-y-3 bg-gray-50/70">
       
       <!-- 검색창 -->
       <div class="relative">
@@ -206,9 +232,9 @@
 
     </section>
 
-    <!-- 상품 카드 리스트 영역 (초기 스켈레톤 로더 기본 배치) -->
-    <main class="flex-1 p-4 overflow-y-auto space-y-3" id="product-container">
-      <div class="space-y-3 animate-pulse">
+    <!-- 상품 카드 리스트/그리드 영역 (모바일: 1열 슬림 리스트, PC: 3~4열 그리드) -->
+    <main class="flex-1 p-4 sm:p-5 product-grid-responsive" id="product-container">
+      <div class="col-span-full space-y-3 animate-pulse">
         <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl text-center">
           <p class="text-xs font-bold text-indigo-700 flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-spinner fa-spin text-indigo-500"></i>
@@ -269,6 +295,36 @@
         </div>
       </div>
     </main>
+
+      </div> <!-- /좌측 메인 카탈로그 & 필터 컬럼 종료 -->
+
+      <!-- 우측 PC 전용 1:1 실시간 스펙 비교 대시보드 (Split-View) -->
+      <aside class="hidden lg:block lg:col-span-5 xl:col-span-4 p-4 sm:p-5 border-l border-gray-200/80 bg-slate-50/50">
+        <div id="desktop-compare-sticky" class="space-y-4">
+          <!-- 대시보드 타이틀 헤더 -->
+          <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs shadow-sm shadow-indigo-300">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+              <div>
+                <h3 class="text-xs sm:text-sm font-extrabold text-gray-900 leading-tight">1:1 실시간 맞대결 대시보드</h3>
+                <span class="text-[10px] text-gray-500">선택 상품 즉시 비교 (Split-View)</span>
+              </div>
+            </div>
+            <button id="desktop-clear-btn" class="text-[11px] font-bold text-gray-500 hover:text-red-600 bg-white px-2.5 py-1 rounded-lg border border-gray-200 transition-colors cursor-pointer">
+              비우기
+            </button>
+          </div>
+
+          <!-- 실시간 1:1 대조 내용 컨테이너 -->
+          <div id="desktop-compare-content" class="space-y-3">
+             <!-- app.js updateDesktopCompareDashboard()에 의해 실시간 동기화 -->
+          </div>
+        </div>
+      </aside>
+
+    </div> <!-- /pc-split-layout 그리드 래퍼 종료 -->
 
     <!-- Footer 영역 (법률 검토 안내 및 서비스 정보, 2단계 확장 대비 슬롯) -->
     <footer class="mt-auto px-4 py-6 border-t border-gray-200 bg-gray-50/90 text-[11px] text-gray-500 space-y-3">
@@ -351,6 +407,20 @@
               서비스에 표시된 각 패션 브랜드의 상표, 상호, 로고 및 상품명에 관한 모든 권리는 해당 권리자에게 있습니다. 본 서비스는 상표법 및 부정경쟁방지법에 의거하여 소비자의 상품 식별 및 객관적 비교 편의를 돕기 위한 설명적 목적으로만 정당하게 인용하고 있습니다.
             </p>
           </details>
+
+          <!-- 5. 자체 제작 참고 일러스트 및 그래픽 고지 -->
+          <details class="group p-3 transition-colors hover:bg-gray-50/60">
+            <summary class="flex items-center justify-between font-bold text-gray-700 cursor-pointer list-none select-none">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-palette text-indigo-500 text-[10px]"></i>
+                <span>5. 제품 일러스트 및 비주얼 그래픽 고지</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-indigo-300">
+              본 서비스에 표시된 제품 실루엣 일러스트, 카테고리 아트워크 및 컬러 그래픽은 케어라벨 소재 정보 이해를 돕기 위한 Otlabel 자체 제작 참고 그래픽이며, 각 패션 브랜드 공식 온라인몰의 실제 제품 사진이나 등록 디자인이 아닙니다. 실제 제품 디자인·색상·디테일은 공식 온라인몰 상세페이지를 확인해 주세요.
+            </p>
+          </details>
         </div>
       </div>
 
@@ -362,14 +432,24 @@
       </div>
     </footer>
 
-    <!-- 하단 상태 고정 바 (1:1 맞대결 담기 바) -->
-    <div id="compare-bottom-bar" class="sticky bottom-0 bg-gray-900 text-white p-3.5 flex items-center justify-between border-t border-gray-800 hidden shadow-2xl z-20">
-      <div class="text-xs">
-        <span class="text-indigo-400 font-bold" id="bottom-bar-count">1</span>개 상품 선택됨
-        <span class="text-gray-400 text-[11px] block">(최대 2개 담아 1:1 비교)</span>
+    <!-- 하단 상태 고정 바 (1:1 맞대결 담기 바) - 모바일 전용 트레이 -->
+    <div id="compare-bottom-bar" class="sticky bottom-0 bg-gray-900/95 backdrop-blur-md text-white p-3.5 flex items-center justify-between border-t border-gray-800 hidden shadow-2xl z-20 lg:hidden">
+      <div class="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+        <div class="relative shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/40 border border-indigo-500/50 flex items-center justify-center text-indigo-400">
+            <i class="fa-solid fa-scale-balanced text-xs"></i>
+          </div>
+          <span id="bottom-bar-count" class="absolute -top-1 -right-1 bg-indigo-500 text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold ring-2 ring-gray-900">0</span>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div id="bottom-bar-items-preview" class="flex items-center gap-1 text-xs font-bold text-gray-200 truncate">
+            <span>맞대결 상품 선택 중</span>
+          </div>
+          <span class="text-[10px] text-gray-400 block truncate">최대 2개 담아 1:1 비교</span>
+        </div>
       </div>
-      <button id="bottom-action-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 active:scale-95 cursor-pointer">
-        <i class="fa-solid fa-bolt"></i>
+      <button id="bottom-action-btn" class="bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer">
+        <i class="fa-solid fa-bolt text-indigo-300"></i>
         <span>1:1 맞대결 보기</span>
       </button>
     </div>
@@ -381,9 +461,14 @@
     <!-- Step 2: Floating CS / Legal Consultation Widget goes here -->
   </div>
 
-  <!-- 1:1 맞대결 모달 팝업 -->
+  <!-- 1:1 맞대결 모달 팝업 (모바일: 슬라이드업 바텀시트, PC: 센터 모달) -->
   <div id="compare-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center hidden">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transition-all animate-in fade-in duration-200">
+    <div class="bottom-sheet-modal bg-white w-full max-w-md sm:max-w-xl rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transition-all">
+      <!-- 모바일 바텀시트 상단 드래그 핸들 바 -->
+      <div class="sm:hidden pt-2.5 pb-1 flex justify-center bg-gray-50 border-b border-gray-100">
+        <div class="bottom-sheet-handle"></div>
+      </div>
+
       <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
         <div>
           <h2 class="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
