@@ -168,7 +168,7 @@ body {
   background-color: #f8fafc;
 }
 
-/* 공식몰 바로가기 버튼 인터랙션 및 시각적 강조 */
+/* 브랜드 공식몰에서 확인하기 버튼 인터랙션 및 시각적 강조 */
 .btn-official-store,
 button[onclick*="handleOutboundClick"] {
   display: inline-flex;

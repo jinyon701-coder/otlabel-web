@@ -41,14 +41,14 @@ const LS_KEY_SAVED_LABELS = "otlabel_saved_labels";
 // 2. 데모 데이터 & 섬유 가중치 테이블
 // =============================================================
 const DEMO_PRODUCTS = [
-  { id: 1, brand: "유니클로", name: "수피마 코튼 크루넥T", price: 19900, fabric: "면(수피마 코튼) 100%", link: "https://www.uniqlo.com/kr/ko/products/E422992-000/00", isSponsored: false },
-  { id: 2, brand: "ZARA", name: "소프트 니트 스웨터", price: 49900, fabric: "폴리에스터 58%, 아크릴 36%, 울 6%", link: "https://www.zara.com", isSponsored: false },
-  { id: 3, brand: "무신사스탠다드", name: "캐시미어 블렌드 라운드넥 니트", price: 58900, fabric: "울 60%, 캐시미어 10%, 나일론 30%", link: "https://www.musinsa.com/products/996636", isSponsored: false },
-  { id: 4, brand: "스파오", name: "클래식 옥스포드 셔츠", price: 29900, fabric: "면 100%", link: "https://spao.com", isSponsored: false },
-  { id: 5, brand: "H&M", name: "릴랙스핏 프리미엄 울 블렌드 코트", price: 149000, fabric: "겉감: 울 50%, 폴리에스터 45%, 기타 5% / 안감: 폴리에스터 100%", link: "https://www2.hm.com", isSponsored: false },
-  { id: 6, brand: "탑텐", name: "에코 웜 모달 긴팔 티셔츠", price: 15900, fabric: "모달 48%, 면 48%, 폴리우레탄 4%", link: "https://topten.topten10mall.com", isSponsored: false },
-  { id: 7, brand: "무신사스탠다드", name: "[시티 레저] 후디드 라이트 다운 재킷 [블랙]", price: 109900, fabric: "겉감: 폴리에스터 100%, 안감: 나일론 100%, 충전재: 덕다운 (오리 솜털 80%, 오리 깃털 20%)", link: "https://www.musinsa.com/products/4356794", isSponsored: false },
-  { id: 8, brand: "스파오", name: "[씬라이트] 여성 시어 후드 재킷_SPJPG4TG25", price: 69900, fabric: "겉감: 나일론 100%, 안감: 나일론 100%, 충전재: 폴리에스터 100%", link: "https://www.spao.com/i/item?itemNo=2608016293&lowerVendNo=LV26000002&pageId=1795096632474&preCornerNo=R13720001_categoryItem", isSponsored: false }
+  { id: 1, brand: "유니클로", name: "수피마 코튼 크루넥T", price: 19900, fabric: "면(수피마 코튼) 100%", link: "https://www.uniqlo.com/kr/ko/products/E422992-000/00", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 2, brand: "ZARA", name: "소프트 니트 스웨터", price: 49900, fabric: "폴리에스터 58%, 아크릴 36%, 울 6%", link: "https://www.zara.com", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 3, brand: "무신사스탠다드", name: "캐시미어 블렌드 라운드넥 니트", price: 58900, fabric: "울 60%, 캐시미어 10%, 나일론 30%", link: "https://www.musinsa.com/products/996636", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 4, brand: "스파오", name: "클래식 옥스포드 셔츠", price: 29900, fabric: "면 100%", link: "https://spao.com", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 5, brand: "H&M", name: "릴랙스핏 프리미엄 울 블렌드 코트", price: 149000, fabric: "겉감: 울 50%, 폴리에스터 45%, 기타 5% / 안감: 폴리에스터 100%", link: "https://www2.hm.com", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 6, brand: "탑텐", name: "에코 웜 모달 긴팔 티셔츠", price: 15900, fabric: "모달 48%, 면 48%, 폴리우레탄 4%", link: "https://topten.topten10mall.com", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 7, brand: "무신사스탠다드", name: "[시티 레저] 후디드 라이트 다운 재킷 [블랙]", price: 109900, fabric: "겉감: 폴리에스터 100%, 안감: 나일론 100%, 충전재: 덕다운 (오리 솜털 80%, 오리 깃털 20%)", link: "https://www.musinsa.com/products/4356794", isSponsored: false, checkedDate: "2026-11-21" },
+  { id: 8, brand: "스파오", name: "[씬라이트] 여성 시어 후드 재킷_SPJPG4TG25", price: 69900, fabric: "겉감: 나일론 100%, 안감: 나일론 100%, 충전재: 폴리에스터 100%", link: "https://www.spao.com/i/item?itemNo=2608016293&lowerVendNo=LV26000002&pageId=1795096632474&preCornerNo=R13720001_categoryItem", isSponsored: false, checkedDate: "2026-11-21" }
 ];
 
 const FIBER_WEIGHT_TABLE = [
@@ -289,6 +289,16 @@ function analyzeFabricEngine(fabricStr) {
       : ["중성세제를 사용한 일반 미온수 세탁을 권장합니다."];
   }
 
+  // 천연섬유 분류 기준(면·울·캐시미어·린넨·마·견 등) 합산 비중 산출
+  const NATURAL_FIBER_REGEX = /면|코튼|cotton|울|모|양모|메리노|merino|lambswool|wool|캐시미어|cashmere|알파카|alpaca|야크|yak|모헤어|mohair|린넨|리넨|linen|마|마혼방|견|실크|silk|다운|down|솜털|깃털|구스|덕/i;
+  let naturalPercent = 0;
+  for (const c of components) {
+    if (NATURAL_FIBER_REGEX.test(c.name) || NATURAL_FIBER_REGEX.test(c.rawName)) {
+      naturalPercent += c.percent;
+    }
+  }
+  naturalPercent = Math.min(100, Math.round(naturalPercent * 10) / 10);
+
   // 핵심 하이라이트 배지 텍스트 (예: "면 100%", "울 60% · 캐시미어 10%")
   let keySummary = "";
   if (components.length > 0) {
@@ -301,6 +311,7 @@ function analyzeFabricEngine(fabricStr) {
 
   return {
     score,
+    naturalPercent,
     components,
     careTips,
     grade,
@@ -514,9 +525,16 @@ function generateShareLink() {
 function generateShareText() {
   if (compareList.length !== 2) return "";
   const [a, b] = compareList;
-  const higherFabric = a.score > b.score ? a : (b.score > a.score ? b : null);
-  const fabricText = higherFabric ? `천연섬유 비중 ${higherFabric.brand} 우세` : "천연섬유 비중 동일 수준";
-  return `[옷라벨 1:1 비교] ${a.brand} vs ${b.brand} (공식 온라인몰 표기 기준)\n• 소재 점수: ${a.score}점 vs ${b.score}점 (${fabricText})\n• 가성비 지수: ${a.costPerf} pt vs ${b.costPerf} pt (정가 기준 환산)\n※ 공식 온라인몰 공시 혼용률 기반의 객관적 분석 지표입니다.\n`;
+  const aNat = a.analysis?.naturalPercent || 0;
+  const bNat = b.analysis?.naturalPercent || 0;
+  const natDiff = Math.abs(Math.round((aNat - bNat) * 10) / 10);
+  let fabricText = "천연섬유 분류 비중 동일";
+  if (aNat > bNat) {
+    fabricText = `천연섬유 분류 비중 ${a.brand} ${natDiff}%p 높음`;
+  } else if (bNat > aNat) {
+    fabricText = `천연섬유 분류 비중 ${b.brand} ${natDiff}%p 높음`;
+  }
+  return `[옷라벨 1:1 비교] ${a.brand} vs ${b.brand} (공식 온라인몰 표기 기준)\n• 표시 소재 혼용률 비교: ${fabricText} (${a.brand} ${aNat}% vs ${b.brand} ${bNat}%)\n• 가성비 환산 지수: ${a.costPerf} pt vs ${b.costPerf} pt\n※ 공식 온라인몰 공시 혼용률 기반의 객관적 분석 지표입니다.\n`;
 }
 
 async function shareCompareResult() {
@@ -1184,7 +1202,8 @@ async function initData() {
             score: analysis.score,
             costPerf: calculateCostPerformance(analysis.score, price),
             link: (r[4] || "").trim() || "#",
-            isSponsored
+            isSponsored,
+            checkedDate: (r[6] || "").trim() || "2026-11-21"
           };
         });
 
@@ -1365,7 +1384,7 @@ function renderProductCards() {
 
     // 스폰서/제휴 뱃지 HTML (공정거래위원회 심사지침 준수)
     const sponsorBadge = p.isSponsored
-      ? `<span class="text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs" title="공정거래위원회 심사지침에 따른 제휴 마케팅 추천 상품입니다."><i class="fa-solid fa-rectangle-ad text-[9px] text-amber-700"></i>추천·제휴광고</span>`
+      ? `<span class="text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs" title="구매 시 수수료를 지급받을 수 있는 광고·제휴 링크입니다."><i class="fa-solid fa-rectangle-ad text-[9px] text-amber-700"></i>광고·제휴 링크 — 구매 시 수수료를 지급받을 수 있습니다</span>`
       : '';
 
     // 카테고리 태그
@@ -1385,7 +1404,7 @@ function renderProductCards() {
     const fiberMiniBar = getFabricMiniProgressBar(p.analysis);
 
     card.innerHTML = `
-      ${sponsorBadge ? `<div class="mb-2 flex items-center justify-between">${sponsorBadge} <span class="text-[9px] text-amber-800 font-medium">공정위 지침 준수 광고</span></div>` : ''}
+      ${sponsorBadge ? `<div class="mb-2 flex items-center justify-between">${sponsorBadge} <span class="text-[9px] text-amber-800 font-medium">공정위 지침 준수</span></div>` : ''}
       
       <!-- 상단: 감각적인 의류 썸네일 카드 영역 (Otlabel Studio Visual) -->
       <div class="product-visual-wrapper relative w-full rounded-2xl overflow-hidden mb-3 bg-gradient-to-br ${brandStyle.bgGradient} border border-gray-100/80 shadow-2xs group">
@@ -1446,7 +1465,7 @@ function renderProductCards() {
               소재 환산 지표
             </span>
             <div class="flex items-center gap-1">
-              <span class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">공식몰 표기 기준</span>
+              <span class="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">공식 표기 기준 · 확인일: ${escapeHTML(p.checkedDate || '2026-11-21')}</span>
               <span class="text-sm font-black ${scoreColor}">${scoreVal}<span class="text-[10px] text-gray-400 font-normal">/100점</span></span>
             </div>
           </div>
@@ -1462,11 +1481,11 @@ function renderProductCards() {
         </div>
       </div>
 
-      <!-- 하단 버튼: [공식몰 바로가기 ↗] + [맞대결 담기] -->
+      <!-- 하단 버튼: [브랜드 공식몰에서 확인하기 ↗] + [맞대결 담기] -->
       <div class="flex items-center gap-2 pt-1 mt-auto">
         <button onclick="handleOutboundClick('${jsBrand}','${jsName}','${jsLink}')"
            class="flex-1 py-2 px-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1 active:scale-95 text-center cursor-pointer min-w-0" title="해당 브랜드 공식 온라인몰 또는 판매처로 이동합니다.">
-          <span class="truncate">공식몰 바로가기</span>
+          <span class="truncate">브랜드 공식몰에서 확인하기</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500 shrink-0"></i>
         </button>
 
@@ -1674,7 +1693,10 @@ function generateCompareHTML() {
         <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-1.5">
           <div class="flex justify-between text-[11px]">
             <span class="text-gray-500 font-semibold">소재 퀄리티 점수</span>
-            <span class="font-black text-indigo-600">${item.score || 0}점</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">공식 표기 기준 · 확인일: ${escapeHTML(item.checkedDate || '2026-11-21')}</span>
+              <span class="font-black text-indigo-600">${item.score || 0}점</span>
+            </div>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div class="bg-indigo-600 h-2 rounded-full" style="width: ${item.score || 0}%"></div>
@@ -1684,7 +1706,7 @@ function generateCompareHTML() {
 
         <button onclick="handleOutboundClick('${jsBrand}','${jsName}','${jsLink}')"
            class="w-full py-2 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
-          <span class="truncate">공식몰에서 실물 및 상세 보기</span>
+          <span class="truncate">브랜드 공식몰에서 확인하기</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500 shrink-0"></i>
         </button>
         <p class="text-[9.5px] text-gray-400 text-center leading-tight mt-2">
@@ -1710,6 +1732,16 @@ function generateCompareHTML() {
     const cheaper = (a.price || 0) < (b.price || 0) ? a : ((a.price || 0) > (b.price || 0) ? b : null);
     const betterFabric = (a.score || 0) > (b.score || 0) ? a : ((a.score || 0) < (b.score || 0) ? b : null);
     const betterCostPerf = (a.costPerf || 0) > (b.costPerf || 0) ? a : ((a.costPerf || 0) < (b.costPerf || 0) ? b : null);
+
+    const aNat = a.analysis?.naturalPercent || 0;
+    const bNat = b.analysis?.naturalPercent || 0;
+    const natDiff = Math.abs(Math.round((aNat - bNat) * 10) / 10);
+    const aNatBadge = aNat > bNat
+      ? `<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 ${natDiff}%p 높음</span>`
+      : (aNat === bNat ? `<span class="text-[9px] font-bold bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 동일</span>` : '');
+    const bNatBadge = bNat > aNat
+      ? `<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 ${natDiff}%p 높음</span>`
+      : (aNat === bNat ? `<span class="text-[9px] font-bold bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 동일</span>` : '');
 
     const aBadges = (a.analysis?.components?.length > 0)
       ? a.analysis.components.slice(0, 3).map(c => `<span class="badge-ratio text-[10px] font-bold bg-indigo-50 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200">${escapeHTML(c.name)} ${c.percent}%</span>`).join(" ")
@@ -1742,13 +1774,13 @@ function generateCompareHTML() {
     const aMiniBar = getFabricMiniProgressBar(a.analysis);
     const bMiniBar = getFabricMiniProgressBar(b.analysis);
 
-    // 가격 차이 안내 문구 (공식 정가 기준 객관적 표기)
+    // 가격 차이 안내 문구 (공식 표시 정가 기준 객관적 표기)
     let priceComparisonBadge = "";
     if (a.price === b.price) {
-      priceComparisonBadge = `<span class="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">정가 동일</span>`;
+      priceComparisonBadge = `<span class="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">공식 표시 정가 동일</span>`;
     } else if (cheaper) {
       priceComparisonBadge = `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full inline-block leading-snug">
-        ${escapeHTML(cheaper.brand)} 공식 정가 기준 ${priceDiff.toLocaleString()}원 낮음
+        ${escapeHTML(cheaper.brand)} 공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음
       </span>`;
     }
 
@@ -1757,7 +1789,7 @@ function generateCompareHTML() {
       <div class="p-2.5 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-emerald-50 border border-indigo-100 flex items-center justify-between gap-1">
         <div class="text-[11px] font-bold text-gray-800 flex items-center gap-1.5 shrink-0">
           <i class="fa-solid fa-coins text-amber-500"></i>
-          <span>공식 정가 비교:</span>
+          <span>공식 표시 정가 비교:</span>
         </div>
         <div class="text-right min-w-0">${priceComparisonBadge}</div>
       </div>
@@ -1791,15 +1823,16 @@ function generateCompareHTML() {
           <div class="min-w-0">
             <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
               <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[76px] sm:max-w-[100px]">${aSafeBrand}</span>
-              ${betterFabric?.id === a.id ? '<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 우세</span>' : ''}
+              ${aNatBadge}
             </div>
             <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2 text-left leading-tight break-words break-keep">${aSafeName}</h4>
             <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${(a.price || 0) > 0 ? a.price.toLocaleString() + '원' : '가격 미정'}</p>
-            ${cheaper?.id === a.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(정가 -${priceDiff.toLocaleString()}원 차이)</p>` : ''}
+            ${cheaper?.id === a.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음)</p>` : ''}
+            <div class="text-[9px] text-gray-500 font-medium text-left mt-0.5 truncate">공식 표기 기준 · 확인일: ${escapeHTML(a.checkedDate || '2026-11-21')}</div>
           </div>
           <button onclick="handleOutboundClick('${aJsBrand}','${aJsName}','${aJsLink}')"
              class="mt-2.5 w-full py-1.5 px-1 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer min-w-0">
-            <span class="truncate">공식몰 바로가기</span>
+            <span class="truncate">브랜드 공식몰에서 확인하기</span>
             <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-500 shrink-0"></i>
           </button>
         </div>
@@ -1831,15 +1864,16 @@ function generateCompareHTML() {
           <div class="min-w-0">
             <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
               <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[76px] sm:max-w-[100px]">${bSafeBrand}</span>
-              ${betterFabric?.id === b.id ? '<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 우세</span>' : ''}
+              ${bNatBadge}
             </div>
             <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2 text-left leading-tight break-words break-keep">${bSafeName}</h4>
             <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${(b.price || 0) > 0 ? b.price.toLocaleString() + '원' : '가격 미정'}</p>
-            ${cheaper?.id === b.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(정가 -${priceDiff.toLocaleString()}원 차이)</p>` : ''}
+            ${cheaper?.id === b.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음)</p>` : ''}
+            <div class="text-[9px] text-gray-500 font-medium text-left mt-0.5 truncate">공식 표기 기준 · 확인일: ${escapeHTML(b.checkedDate || '2026-11-21')}</div>
           </div>
           <button onclick="handleOutboundClick('${bJsBrand}','${bJsName}','${bJsLink}')"
              class="mt-2.5 w-full py-1.5 px-1 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer min-w-0">
-            <span class="truncate">공식몰 바로가기</span>
+            <span class="truncate">브랜드 공식몰에서 확인하기</span>
             <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-500 shrink-0"></i>
           </button>
         </div>
@@ -1852,11 +1886,11 @@ function generateCompareHTML() {
 
       <!-- 정밀 비교 바 및 수치 대조 -->
       <div class="bg-gray-50 rounded-2xl p-3 sm:p-3.5 space-y-3.5 border border-gray-200">
-        <!-- 소재 점수 맞대결 게이지 -->
+        <!-- 표시 소재 혼용률 비교 게이지 -->
         <div>
           <div class="flex justify-between items-center text-[11px] font-bold text-gray-700 mb-1.5 gap-1">
             <span class="truncate max-w-[90px] sm:max-w-[120px] ${betterFabric?.id === a.id ? 'text-indigo-600 font-black' : ''}">${aSafeBrand} (${a.score || 0}점)</span>
-            <span class="text-[10px] text-gray-400 font-semibold shrink-0">소재 지표 비교 (공식 표기 기준)</span>
+            <span class="text-[10px] text-gray-500 font-semibold shrink-0">표시 소재 혼용률 비교 (공식 표기 기준)</span>
             <span class="truncate max-w-[90px] sm:max-w-[120px] text-right ${betterFabric?.id === b.id ? 'text-indigo-600 font-black' : ''}">(${b.score || 0}점) ${bSafeBrand}</span>
           </div>
           <div class="grid grid-cols-2 gap-1 h-3">
@@ -1918,18 +1952,24 @@ function generateCompareHTML() {
         </div>
       </div>
 
-      <!-- 케어라벨 객관적 비교 요약 (공식 온라인몰 공시 기준) -->
-      <div class="bg-indigo-50/80 border border-indigo-100 rounded-2xl p-3 sm:p-3.5 text-xs text-indigo-950 space-y-2 shadow-xs">
+      <!-- 비교 결과 요약 (공식 온라인몰 공시 기준) -->
+      <div class="bg-indigo-50/80 border border-indigo-100 rounded-2xl p-3 sm:p-3.5 text-xs text-indigo-950 space-y-2.5 shadow-xs">
         <div class="font-extrabold flex items-center justify-between text-indigo-800">
           <span class="flex items-center gap-1.5">
             <i class="fa-solid fa-circle-check text-indigo-600"></i>
-            <span>케어라벨 객관적 비교 요약</span>
+            <span>비교 결과 요약</span>
           </span>
           <span class="text-[9px] font-semibold text-indigo-600 bg-white/90 px-2 py-0.5 rounded-full border border-indigo-200">공식몰 공시 기준</span>
         </div>
+
+        <!-- 천연/합성섬유 분류 기준 안내 문구 -->
+        <div class="p-2.5 bg-white/95 rounded-xl border border-indigo-100 text-[10px] text-gray-600 leading-normal">
+          <span class="font-bold text-gray-700"><i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i>분류 기준:</span> 면·울·캐시미어·린넨·마·견(실크)은 천연섬유로, 폴리에스터·나일론·아크릴·스판덱스·레이온·모달·텐셀 등은 합성·재생섬유로 분류하여 공시된 혼용률 수치를 합산합니다.
+        </div>
+
         <div class="text-[11px] leading-relaxed space-y-1.5 break-keep text-gray-700">
-          <p>• <strong>소재 혼용 지표:</strong> ${betterFabric ? `<strong>${escapeHTML(betterFabric.brand)}</strong>이(가) 천연·고급 섬유 혼용률 산출 점수에서 <strong>+${scoreDiff}점</strong> 높게 집계되었습니다.` : '두 제품의 공학적 섬유 혼용 환산 점수가 동일합니다.'}</p>
-          <p>• <strong>공식 정가 비교:</strong> ${cheaper && priceDiff > 0 ? `공식 온라인몰 기준 정가는 <strong>${escapeHTML(cheaper.brand)}</strong>이(가) <strong>${priceDiff.toLocaleString()}원</strong> 낮습니다. <span class="text-[10px] text-gray-500">(할인 쿠폰·프로모션에 따라 실구매가는 상이할 수 있습니다.)</span>` : '두 제품의 공식몰 정가가 동일합니다.'}</p>
+          <p>• <strong>표시 소재 혼용률 비교:</strong> ${aNat !== bNat ? `<strong>${aNat > bNat ? escapeHTML(a.brand) : escapeHTML(b.brand)}</strong>이(가) 천연섬유 분류 비중에서 <strong>${natDiff}%p 높게</strong> 산출되었습니다. (${a.brand} ${aNat}% vs ${b.brand} ${bNat}%)` : `두 제품의 천연섬유 분류 비중이 동일합니다. (${a.brand} ${aNat}% vs ${b.brand} ${bNat}%)`}</p>
+          <p>• <strong>공식 표시 정가 비교:</strong> ${cheaper && priceDiff > 0 ? `공식 온라인몰 표시 정가는 <strong>${escapeHTML(cheaper.brand)}</strong>이(가) <strong>${priceDiff.toLocaleString()}원 낮습니다</strong>. <span class="text-[10px] text-gray-500">(할인 쿠폰·프로모션에 따라 실구매가는 상이할 수 있습니다.)</span>` : '두 제품의 공식 온라인몰 표시 정가가 동일합니다.'}</p>
           <p>• <strong>가성비 환산 지수:</strong> ${betterCostPerf ? `정가 대비 섬유 점수 비례 지수는 <strong>${escapeHTML(betterCostPerf.brand)}</strong>이(가) 더 높게 산출됩니다.` : '정가 대비 섬유 비례 지수가 유사합니다.'} <span class="text-[10px] text-gray-500">(원단 밀도, 편직 방식 등은 반영되지 않은 단순 혼용률/정가 기준 수치입니다.)</span></p>
         </div>
         <div class="pt-2 border-t border-indigo-100/80 text-[10px] text-gray-500 leading-normal flex items-start gap-1">
@@ -2188,12 +2228,43 @@ function setupEventListeners() {
 }
 
 // =============================================================
-// 15. 앱 시작
+// 15. 이용약관 및 개인정보처리방침 모달 제어
+// =============================================================
+window.openTermsModal = function() {
+  const modal = document.getElementById("terms-modal");
+  if (modal) modal.classList.remove("hidden");
+};
+
+window.closeTermsModal = function() {
+  const modal = document.getElementById("terms-modal");
+  if (modal) modal.classList.add("hidden");
+};
+
+window.openPrivacyModal = function() {
+  const modal = document.getElementById("privacy-modal");
+  if (modal) modal.classList.remove("hidden");
+};
+
+window.closePrivacyModal = function() {
+  const modal = document.getElementById("privacy-modal");
+  if (modal) modal.classList.add("hidden");
+};
+
+// =============================================================
+// 16. 앱 시작
 // =============================================================
 document.addEventListener("DOMContentLoaded", () => {
   setupResponsivePCView();
   window.addEventListener("resize", setupResponsivePCView);
   setupEventListeners();
+
+  document.getElementById("terms-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "terms-modal") window.closeTermsModal();
+  });
+  document.getElementById("privacy-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "privacy-modal") window.closePrivacyModal();
+  });
+
   updateCompareUI();
   initData();
 });

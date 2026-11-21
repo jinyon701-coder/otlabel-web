@@ -51,7 +51,7 @@
 3. **실시간 품절/리오더**: 인기 색상·사이즈의 순간 품절
 
 🔍 **실시간 확인 팁**:
-각 의류 카드의 **[공식몰 바로가기]** 버튼을 탭하시면 해당 브랜드 공식몰로 이동하여 현재 시점의 최종 결제가격과 재고를 즉시 확인하실 수 있습니다.`
+각 의류 카드의 **[브랜드 공식몰에서 확인하기]** 버튼을 탭하시면 해당 브랜드 공식몰로 이동하여 현재 시점의 최종 결제가격과 재고를 즉시 확인하실 수 있습니다.`
     },
     report: {
       title: '📝 원단 정보 수정/제보',
@@ -202,7 +202,7 @@
       response: `**🏷️ 공식몰 가격 및 실시간 할인 안내**
 
 옷라벨에 표기된 가격은 브랜드 공식몰의 정가 및 일반 할인가 기준입니다.
-브랜드별 깜짝 타임딜이나 회원 등급 할인 쿠폰에 따라 실제 결제 가격이 더 저렴할 수 있으니, 각 카드 하단의 **[공식몰 바로가기]**를 통해 최신 가격을 확인해보세요!`
+브랜드별 깜짝 타임딜이나 회원 등급 할인 쿠폰에 따라 실제 결제 가격이 공시 정가보다 더 낮을 수 있으니, 각 카드 하단의 **[브랜드 공식몰에서 확인하기]**를 통해 최신 가격을 확인해보세요!`
     },
     {
       keywords: ['오류', '수정', '제보', '틀림', '잘못', '바뀜'],
@@ -393,6 +393,13 @@
                           placeholder="발견하신 실제 케어라벨 혼용률이나 정정할 내용을 구체적으로 적어주세요.&#10;(예: 공식몰 표기는 면 100%인데 앱에는 폴리 20%로 나와 있습니다.)" 
                           required maxlength="500"></textarea>
                 <span class="cs-char-counter"><span id="cs-char-num">0</span> / 500자</span>
+              </div>
+
+              <!-- 개인정보 보호 및 비저장 법률 준수 고지 -->
+              <div class="p-2.5 rounded-lg bg-gray-50 border border-gray-200 text-[10px] text-gray-500 leading-normal">
+                <i class="fa-solid fa-shield-halved text-indigo-500 mr-1"></i>
+                제보 내용은 별도 서버나 구글 시트에 저장되지 않으며, 이메일 발송 시 
+                <button type="button" onclick="window.openPrivacyModal && window.openPrivacyModal()" class="text-indigo-600 font-bold underline cursor-pointer hover:text-indigo-800">[개인정보처리방침]</button>에 따라 회신 목적에만 사용 후 파기됩니다.
               </div>
 
               <!-- 폼 액션 버튼 2종 -->

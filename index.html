@@ -51,6 +51,14 @@
       </div>
     </header>
 
+    <!-- 상표법·부정경쟁방지법 준수 비공식 독립 정보 비교 서비스 안내 배너 -->
+    <aside class="bg-slate-100 border-b border-slate-200 px-4 py-1.5 text-center text-[10px] sm:text-[11px] text-slate-600 font-medium">
+      <span class="inline-flex items-center gap-1.5 flex-wrap justify-center">
+        <i class="fa-solid fa-circle-info text-indigo-500"></i>
+        <span>본 서비스는 각 패션 브랜드의 공식 홈페이지 또는 공식 제휴 서비스가 아니며, 소비자의 객관적 비교 편의를 돕는 <strong>비공식 독립 정보 비교 서비스</strong>입니다.</span>
+      </span>
+    </aside>
+
     <!-- PC 웹 vs 모바일 분리 레이아웃 그리드 래퍼 -->
     <div class="pc-split-layout lg:grid lg:grid-cols-12 lg:gap-6 flex-1 w-full">
 
@@ -366,17 +374,17 @@
             </p>
           </details>
 
-          <!-- 2. 통신판매중개 및 정보제공자 면책 고지 -->
+          <!-- 2. 단순 정보 제공 및 외부 공식몰 링크 연결 면책 고지 -->
           <details class="group p-3 transition-colors hover:bg-gray-50/60">
             <summary class="flex items-center justify-between font-bold text-gray-700 cursor-pointer list-none select-none">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-scale-balanced text-indigo-500 text-[10px]"></i>
-                <span>2. 통신판매중개자 및 전자상거래 면책 고지</span>
+                <span>2. 단순 정보 제공 및 외부 공식몰 링크 연결 면책 고지</span>
               </span>
               <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
             </summary>
             <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-indigo-200">
-              옷라벨은 통신판매의 직접 당사자가 아닌 전자상거래 정보 제공 및 통신판매중개자입니다. 본 플랫폼 내 링크를 통해 연결되는 각 브랜드 공식몰 및 제휴 판매처에서 이루어지는 상품 주문, 결제, 배송, 취소·환불 및 CS 관련 모든 책임은 해당 통신판매업자(각 쇼핑몰)에게 있습니다.
+              옷라벨은 <strong>단순 정보 제공 및 외부 공식몰 링크 연결 서비스이며, 통신판매의 당사자가 아닙니다.</strong> 본 플랫폼 내 링크를 통해 연결되는 각 브랜드 공식 온라인몰 및 외부 판매처에서 이루어지는 상품 주문, 결제, 배송, 취소·환불 및 CS 관련 모든 법적 책임은 해당 통신판매업자(각 쇼핑몰 운영사)에게 있습니다.
             </p>
           </details>
 
@@ -390,7 +398,7 @@
               <i class="fa-solid fa-chevron-down text-[9px] text-gray-400 group-open:rotate-180 transition-transform"></i>
             </summary>
             <p class="mt-2 text-gray-500 leading-relaxed pl-4 border-l-2 border-amber-300">
-              공정거래위원회 「추천·보증 등에 관한 표시·광고 심사지침」에 따라, 서비스 내 '추천·제휴광고' 표기 상품 또는 일부 링크(쿠팡 파트너스, 무신사 어필리에이트 등)를 통해 구매가 이루어질 경우 플랫폼 운영을 위한 소정의 수수료를 지급받을 수 있습니다. 제휴 여부는 소재 분석 점수 산출 알고리즘 및 팩트 지표 산정에 일체 영향을 미치지 않습니다.
+              공정거래위원회 「추천·보증 등에 관한 표시·광고 심사지침」에 따라, 서비스 내 '광고·제휴 링크 — 구매 시 수수료를 지급받을 수 있습니다' 표기 상품 또는 일부 링크(쿠팡 파트너스, 무신사 어필리에이트 등)를 통해 구매가 이루어질 경우 플랫폼 운영을 위한 소정의 수수료를 지급받을 수 있습니다. 제휴 여부는 소재 분석 점수 산출 알고리즘 및 팩트 지표 산정에 일체 영향을 미치지 않습니다.
             </p>
           </details>
 
@@ -425,9 +433,9 @@
       </div>
 
       <div class="pt-2 border-t border-gray-200/80 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-gray-400">
-        <a href="#" class="hover:text-gray-600 underline">이용약관</a>
-        <a href="#" class="hover:text-gray-600 underline">개인정보처리방침</a>
-        <a href="#" class="hover:text-gray-600 underline">공시정보 및 법률 면책</a>
+        <button type="button" onclick="openTermsModal()" class="hover:text-gray-600 underline cursor-pointer">이용약관</button>
+        <button type="button" onclick="openPrivacyModal()" class="hover:text-gray-600 underline cursor-pointer">개인정보처리방침</button>
+        <a href="#legal-disclaimer-slot" class="hover:text-gray-600 underline">공시정보 및 법률 면책</a>
         <span>© 2026 Otlabel. All rights reserved.</span>
       </div>
     </footer>
@@ -497,6 +505,93 @@
             확인
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [이용약관] 전용 팝업 모달 -->
+  <div id="terms-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
+      <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-file-contract text-indigo-600"></i>
+          <h2 class="text-sm font-extrabold text-gray-900">옷라벨 서비스 이용약관</h2>
+        </div>
+        <button type="button" onclick="closeTermsModal()" class="w-7 h-7 rounded-full bg-gray-200/80 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-600 leading-relaxed">
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">제1조 (목적)</h3>
+          <p>본 약관은 비공식 독립 정보 비교 플랫폼 '옷라벨(Otlabel)'(이하 "서비스")이 제공하는 의류 케어라벨 혼용률 및 표시 가격 정보 비교 서비스의 이용 조건 및 절차, 이용자와 서비스 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">제2조 (비공식 독립 서비스의 지위 및 상표권 한계)</h3>
+          <p>본 서비스는 각 패션 브랜드의 공식 홈페이지 또는 제휴 서비스가 아니며, 비공식 독립 정보 비교 서비스입니다. 서비스에 언급된 각 브랜드 상표, 로고 및 명칭은 상품 식별을 위한 설명적 목적으로만 인용되며, 상표권은 해당 권리자에게 귀속됩니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">제3조 (정보의 성격 및 면책)</h3>
+          <p>1. 서비스가 제공하는 섬유 분류 비율 및 가성비 환산 지표는 각 브랜드 공식몰에 공시된 케어라벨 텍스트를 기계적으로 단순 합산한 보조 지표입니다.</p>
+          <p>2. 제조 차수(Lot), 시즌 리뉴얼, 직조 밀도, 가공법에 따라 실제 착용감이 다를 수 있으며, 회사는 정보의 완전성·무오결성을 보증하지 않습니다. 최종 구매 전 공식 온라인몰의 최신 상품 정보를 확인하시기 바랍니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">제4조 (외부 공식몰 링크 연결 및 전자상거래 면책)</h3>
+          <p>본 서비스는 단순 정보 제공 및 외부 공식몰 링크 연결 서비스이며, 통신판매의 당사자가 아닙니다. 연결된 공식몰 및 외부 사이트에서의 결제, 배송, 교환, 환불 등 거래에 관한 모든 책임은 해당 판매자(통신판매업자)에게 귀속됩니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">제5조 (자체 제작 비주얼 콘텐츠의 저작권)</h3>
+          <p>서비스 내 제공되는 스튜디오 실루엣 일러스트, 레이아웃, SVG 그래픽 및 알고리즘 등은 옷라벨의 자체 저작물이며, 무단 복제·배포·상업적 이용을 엄격히 금지합니다.</p>
+        </div>
+      </div>
+      <div class="p-3 border-t border-gray-100 bg-gray-50 text-right">
+        <button type="button" onclick="closeTermsModal()" class="px-5 py-2 text-xs font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors cursor-pointer">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- [개인정보처리방침] 전용 팝업 모달 -->
+  <div id="privacy-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
+      <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+          <h2 class="text-sm font-extrabold text-gray-900">옷라벨 개인정보처리방침</h2>
+        </div>
+        <button type="button" onclick="closePrivacyModal()" class="w-7 h-7 rounded-full bg-gray-200/80 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors cursor-pointer">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-600 leading-relaxed">
+        <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-900 font-medium">
+          옷라벨(Otlabel)은 회원가입이나 로그인 없이 운영되는 웹 서비스로, 일반 이용자의 개인정보를 서버에 일절 수집·저장하지 않습니다.
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">1. 수집하는 개인정보의 항목</h3>
+          <p>• 오류 제보 및 고객 문의 시: 발신자 이메일 주소, 문의 대상 상품명, 오류 상세 제보 내용</p>
+          <p>• 자동 수집 정보: 브라우저 종류(User-Agent) 및 기기 해상도(이메일 발송 본문에만 자발적 포함)</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">2. 개인정보의 수집 및 이용 목적</h3>
+          <p>• 접수된 케어라벨 오류 확인 및 데이터 정정 처리</p>
+          <p>• 제보자에 대한 처리 결과 안내 및 회신</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">3. 개인정보의 보유 및 이용 기간</h3>
+          <p>• <strong>문의 처리 완료 시 즉시 파기</strong>를 원칙으로 하며, 분쟁 대응을 위해 최대 30일 이내에 영구 삭제합니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">4. 별도 DB 및 구글 시트 비저장 원칙</h3>
+          <p>• 이용자가 입력한 문의 및 제보 내용은 <strong>별도의 외부 데이터베이스나 구글 스프레드시트에 영구 저장되지 않으며, 오직 사용자 기기의 이메일 클라이언트를 통한 1:1 메일 전송 목적으로만 사용</strong>됩니다. 또한 어떠한 경우에도 개인정보를 국외 이전하거나 제3자에게 제공하지 않습니다.</p>
+        </div>
+        <div>
+          <h3 class="font-bold text-gray-900 mb-1 text-[13px]">5. 정보주체의 권리 행사 및 고충 처리</h3>
+          <p>이용자는 언제든지 본인의 개인정보에 대해 열람, 정정, 삭제, 처리정지를 요구할 수 있습니다.</p>
+          <p class="mt-1 font-bold text-gray-800">• 개인정보 보호 책임 창구: kimjy89701@gmail.com</p>
+        </div>
+      </div>
+      <div class="p-3 border-t border-gray-100 bg-gray-50 text-right">
+        <button type="button" onclick="closePrivacyModal()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer">확인</button>
       </div>
     </div>
   </div>

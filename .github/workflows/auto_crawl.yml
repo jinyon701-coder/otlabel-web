@@ -1,10 +1,14 @@
 name: Otlabel Auto Care-Label Crawler
 
+# on:
+#   schedule:
+#     # [법률 자문 P0 조치] 브랜드별 이용약관 및 자동 접근권한 사전 확인 전까지 무단 자동 크롤링 비활성화
+#     # 매일 한국 시간(KST) 새벽 6시 실행 (UTC 21:00)
+#     # - cron: '0 21 * * *'
+#   workflow_dispatch: # GitHub 웹 UI에서 수동 즉시 실행 버튼 지원
+
 on:
-  schedule:
-    # 매일 한국 시간(KST) 새벽 6시 실행 (UTC 21:00)
-    - cron: '0 21 * * *'
-  workflow_dispatch: # GitHub 웹 UI에서 수동 즉시 실행 버튼 지원
+  workflow_dispatch: # [법률 자문 P0 준수] 운영자 승인 하에 수동 즉시 실행만 허용
 
 jobs:
   crawl-and-sync:

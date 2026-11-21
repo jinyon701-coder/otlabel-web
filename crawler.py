@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Otlabel SPA 상품 케어라벨 정보 자동 수집기
-- 무신사스탠다드, 스파오, 탑텐, 유니클로 인기 상품 크롤링
-- Playwright Headless Chromium 기반
-- Google Apps Script Webhook 기반 구글 시트 동기화 (중복 URL 스킵)
+Otlabel SPA 상품 케어라벨 정보 수집기
+[법률 자문 P0 조치: 브랜드별 이용약관 및 자동 접근권한 사전 확인 전까지 대량 자동 수집 보류]
+- 본 스크립트는 운영자 수동 승인 및 사내 검증 목적으로만 제한적으로 실행됩니다.
+- 운영자가 직접 공식 스토어 표기치를 검증하고 checkedDate(확인일)를 기록한 데이터를 표준으로 채택합니다.
+- 무단 대량 수집 방지를 위한 실행 가드가 기본 적용되어 있습니다.
 """
 
 import csv
@@ -318,13 +319,27 @@ def parse_product_page(page, url: str) -> Optional[Dict[str, any]]:
         "price": price,
         "fabric": fabric,
         "link": url,
-        "isSponsored": False
+        "isSponsored": False,
+        "checkedDate": time.strftime("%Y-%m-%d")
     }
 
 
 def run_crawler():
-    """메인 크롤링 파이프라인"""
-    logger.info("=== Otlabel SPA 케어라벨 자동 수집기 가동 ===")
+    """메인 크롤링 파이프라인 (법률 자문 P0 안전 가드 포함)"""
+    logger.info("=== Otlabel SPA 케어라벨 정보 수집기 가동 ===")
+
+    # [법률 자문 P0 조치] 자동 대량 크롤링 방지 가드
+    allow_crawl = os.environ.get("ALLOW_MANUAL_CRAWL", "").strip().lower() in ("true", "1", "yes")
+    if not allow_crawl and "--force" not in sys.argv:
+        logger.warning("=" * 68)
+        logger.warning(" [법률 자문 P0 조치] 브랜드별 이용약관 및 자동 접근권한 사전 확인 전까지")
+        logger.warning(" 무단 대량 자동 크롤링이 안전하게 기본 보류(일시 중지)되어 있습니다.")
+        logger.warning(" 운영자 수동 검증 목적으로 단발 실행하시려면:")
+        logger.warning("   환경변수: ALLOW_MANUAL_CRAWL=true")
+        logger.warning("   또는 명령행 옵션: python crawler.py --force")
+        logger.warning(" 로 명시적 승인 후 실행해 주시기 바랍니다.")
+        logger.warning("=" * 68)
+        return
 
     existing_links = get_existing_links()
 
