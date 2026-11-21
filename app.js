@@ -1051,13 +1051,9 @@ function getCategoryVisualSVG(category, brand, fabric, analysis, options = {}) {
 }
 
 function setupResponsivePCView() {
-  const mainWrapper = document.querySelector("body > div.w-full");
-  if (mainWrapper && !mainWrapper.classList.contains("md:max-w-3xl")) {
-    mainWrapper.classList.add("md:max-w-3xl", "lg:max-w-4xl", "transition-all");
-  }
   const mainContainer = document.getElementById("product-container");
   if (mainContainer && !mainContainer.classList.contains("md:grid")) {
-    mainContainer.classList.add("md:grid", "md:grid-cols-2", "md:gap-3.5", "md:space-y-0");
+    mainContainer.classList.add("md:grid", "md:grid-cols-2", "xl:grid-cols-3", "gap-3", "sm:gap-3.5", "space-y-0");
   }
 }
 
@@ -1355,32 +1351,36 @@ function renderProductCards() {
     const card = document.createElement("div");
 
     const sponsorClass = p.isSponsored ? 'sponsor-glow border-amber-300' : '';
-    card.className = `p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+    card.className = `product-editorial-card p-3 sm:p-4 rounded-2xl border transition-all flex flex-col justify-between ${
       isSelected 
-        ? 'bg-indigo-50/70 border-indigo-600 ring-2 ring-indigo-200 shadow-md' 
-        : `bg-white border-gray-200 hover:border-gray-300 shadow-sm ${sponsorClass}`
+        ? 'ring-2 ring-emerald-600 bg-emerald-50/20 border-emerald-500 shadow-md' 
+        : `bg-white border-gray-200/90 hover:border-gray-300 shadow-2xs hover:shadow-lg hover:-translate-y-0.5 ${sponsorClass}`
     }`;
 
-    let barColor = "bg-indigo-600";
-    let scoreColor = "text-indigo-600";
-    let badgeBg = "bg-indigo-50 text-indigo-700 border-indigo-100";
+    let barColor = "bg-emerald-600";
+    let scoreColor = "text-emerald-700";
+    let badgeBg = "bg-emerald-50 text-emerald-800 border-emerald-200";
     const scoreVal = typeof p.score === "number" ? p.score : (p.analysis?.score || 0);
     if (scoreVal >= 88) {
       barColor = "bg-emerald-500"; scoreColor = "text-emerald-700"; badgeBg = "bg-emerald-50 text-emerald-800 border-emerald-200";
     } else if (scoreVal >= 75) {
-      barColor = "bg-indigo-600"; scoreColor = "text-indigo-600"; badgeBg = "bg-indigo-50 text-indigo-700 border-indigo-200";
+      barColor = "bg-teal-600"; scoreColor = "text-teal-700"; badgeBg = "bg-teal-50 text-teal-800 border-teal-200";
     } else if (scoreVal >= 60) {
       barColor = "bg-amber-500"; scoreColor = "text-amber-700"; badgeBg = "bg-amber-50 text-amber-800 border-amber-200";
     } else {
-      barColor = "bg-rose-500"; scoreColor = "text-rose-600"; badgeBg = "bg-rose-50 text-rose-700 border-rose-200";
+      barColor = "bg-slate-400"; scoreColor = "text-slate-600"; badgeBg = "bg-slate-100 text-slate-700 border-slate-200";
     }
 
-    // 혼용률 핵심 배지 생성
+    // 천연섬유/합성섬유 분류 정밀 판별 및 배지 생성
+    const NATURAL_FIBER_REGEX = /면|코튼|cotton|울|모|양모|메리노|merino|lambswool|wool|캐시미어|cashmere|알파카|alpaca|야크|yak|모헤어|mohair|린넨|리넨|linen|마|마혼방|견|실크|silk|다운|down|솜털|깃털|구스|덕/i;
     const componentChips = (p.analysis && Array.isArray(p.analysis.components) && p.analysis.components.length > 0)
-      ? p.analysis.components.slice(0, 3).map(c => 
-          `<span class="badge-ratio text-[10px] font-bold bg-white text-gray-800 px-2 py-0.5 rounded-md border border-gray-300 shadow-2xs">${escapeHTML(c.name)} ${c.percent}%</span>`
-        ).join("")
-      : `<span class="badge-ratio text-[10px] font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">${escapeHTML(p.analysis?.keySummary || "라벨 확인 필요")}</span>`;
+      ? p.analysis.components.slice(0, 3).map(c => {
+          const isNat = NATURAL_FIBER_REGEX.test(c.name) || NATURAL_FIBER_REGEX.test(c.rawName || "");
+          const badgeCls = isNat ? "badge-natural" : "badge-synthetic";
+          const icon = isNat ? '<i class="fa-solid fa-leaf text-[8px] text-emerald-600 mr-0.5"></i>' : '';
+          return `<span class="badge-ratio ${badgeCls} text-[10px] px-2 py-0.5 rounded-md shadow-2xs tabular-nums">${icon}${escapeHTML(c.name)} ${c.percent}%</span>`;
+        }).join("")
+      : `<span class="badge-ratio badge-synthetic text-[10px] px-2 py-0.5 rounded-md">${escapeHTML(p.analysis?.keySummary || "라벨 확인 필요")}</span>`;
 
     // 스폰서/제휴 뱃지 HTML (공정거래위원회 심사지침 준수)
     const sponsorBadge = p.isSponsored
@@ -1388,7 +1388,7 @@ function renderProductCards() {
       : '';
 
     // 카테고리 태그
-    const categoryBadge = p.category ? `<span class="text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">${escapeHTML(p.category)}</span>` : '';
+    const categoryBadge = p.category ? `<span class="text-[9px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.2 rounded">${escapeHTML(p.category)}</span>` : '';
 
     const safeBrand = escapeHTML(p.brand || "기타");
     const safeName = escapeHTML(p.name || "의류");
@@ -1406,35 +1406,34 @@ function renderProductCards() {
     card.innerHTML = `
       ${sponsorBadge ? `<div class="mb-2 flex items-center justify-between">${sponsorBadge} <span class="text-[9px] text-amber-800 font-medium">공정위 지침 준수</span></div>` : ''}
       
-      <!-- 상단: 감각적인 의류 썸네일 카드 영역 (Otlabel Studio Visual) -->
-      <div class="product-visual-wrapper relative w-full rounded-2xl overflow-hidden mb-3 bg-gradient-to-br ${brandStyle.bgGradient} border border-gray-100/80 shadow-2xs group">
-        <!-- 상단: 브랜드 시그니처 배지 & Otlabel Studio Visual 워터마크 라벨 -->
-        <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10 pointer-events-none">
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide text-white shadow-xs" style="background-color: ${brandStyle.primary}">
+      <!-- 상단: 감각적인 의류 썸네일 룩북 프레임 (Otlabel Lookbook Spec) -->
+      <div class="product-visual-wrapper relative w-full rounded-xl overflow-hidden mb-2.5 bg-gradient-to-br ${brandStyle.bgGradient} border border-gray-150 shadow-2xs group">
+        <!-- 상단: 브랜드 시그니처 배지 & 케어라벨 스펙 태그 -->
+        <div class="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wide text-white shadow-2xs" style="background-color: ${brandStyle.primary}">
             <span class="w-1.5 h-1.5 rounded-full border border-white/40" style="background-color: ${brandStyle.accent}"></span>
             <span>${safeBrand}</span>
           </span>
-          <span class="text-[9px] font-bold text-gray-500 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full border border-gray-200/70 flex items-center gap-1 shadow-2xs">
-            <i class="fa-solid fa-camera text-[8px] text-gray-400"></i>
-            <span>Otlabel Studio Visual</span>
+          <span class="text-[9px] font-bold text-gray-600 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full border border-gray-200/80 shadow-2xs">
+            CARE LABEL · SPEC
           </span>
         </div>
 
-        <!-- 스튜디오 실루엣 SVG 일러스트 -->
-        <div class="w-full h-36 flex items-center justify-center pt-5 pb-1 px-3 transition-transform duration-300 group-hover:scale-[1.03]">
+        <!-- 스튜디오 실루엣 SVG 일러스트 (모바일 세로 높이 슬림 최적화) -->
+        <div class="w-full h-28 sm:h-32 flex items-center justify-center pt-4 pb-1 px-3 transition-transform duration-300 group-hover:scale-[1.03]">
           ${visualSVG}
         </div>
 
-        <!-- 하단: 원단 주요 혼용률 미니 그래픽 투톤/멀티톤 프로그레스 바 -->
-        <div class="px-3 py-1.5 bg-white/95 backdrop-blur-xs border-t border-gray-100/90">
-          <div class="flex items-center justify-between text-[10px] font-bold text-gray-600 mb-1">
+        <!-- 하단: 원단 주요 구성 미니 프로그레스 바 -->
+        <div class="px-2.5 py-1 bg-white/95 backdrop-blur-xs border-t border-gray-100/90">
+          <div class="flex items-center justify-between text-[9px] font-bold text-gray-600 mb-0.5">
             <span class="flex items-center gap-1">
-              <i class="fa-solid fa-layer-group text-[9px] text-indigo-500"></i>
+              <i class="fa-solid fa-layer-group text-[8px] text-emerald-600"></i>
               <span>원단 주요 구성</span>
             </span>
-            <span class="text-gray-700 font-extrabold text-[10px] truncate max-w-[140px]">${fiberSummary}</span>
+            <span class="text-gray-700 font-extrabold text-[9px] truncate max-w-[130px]">${fiberSummary}</span>
           </div>
-          <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-200/50">
+          <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex shadow-inner border border-gray-200/50">
             ${fiberMiniBar}
           </div>
         </div>
@@ -1444,56 +1443,75 @@ function renderProductCards() {
       <div>
         <div class="flex items-start justify-between gap-2">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeBg}">${safeBrand}</span>
+            <div class="flex items-center gap-1 mb-1 flex-wrap">
+              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded border ${badgeBg}">${safeBrand}</span>
               ${categoryBadge}
-              <span class="text-[10px] font-bold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded">가성비 ${p.costPerf || 0} pt</span>
-              ${p.analysis?.grade ? `<span class="text-[10px] text-gray-500 font-medium">${escapeHTML(p.analysis.grade)}</span>` : ''}
+              <span class="text-[9px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.2 rounded tabular-nums">가성비 ${p.costPerf || 0} pt</span>
+              ${p.analysis?.grade ? `<span class="text-[9px] text-gray-500 font-medium">${escapeHTML(p.analysis.grade)}</span>` : ''}
             </div>
-            <h3 class="text-xs sm:text-sm font-extrabold text-gray-900 leading-snug line-clamp-2 break-keep">${safeName}</h3>
+            <h3 class="text-xs sm:text-sm font-extrabold text-[#111827] leading-snug line-clamp-2 break-keep">${safeName}</h3>
           </div>
           <div class="text-right whitespace-nowrap pl-1">
-            <span class="text-xs sm:text-sm font-black text-gray-900">${(p.price || 0) > 0 ? p.price.toLocaleString() + '원' : '가격 미정'}</span>
+            <span class="text-xs sm:text-sm font-black text-[#111827] tabular-nums">${(p.price || 0) > 0 ? p.price.toLocaleString() + '원' : '가격 미정'}</span>
           </div>
         </div>
 
-        <!-- 소재 점수 직관적 게이지 바 및 혼용률 배지 -->
-        <div class="my-3 bg-gray-50/90 rounded-xl p-3 border border-gray-100 space-y-2">
+        <!-- 실제 의류 안쪽 세탁 라벨(Care Label) 질감 박스 & 소재 점수 설명 툴팁 -->
+        <div class="my-2 care-label-box p-2.5 sm:p-3 rounded-xl border border-dashed border-gray-200 space-y-2 bg-[#FAFAF9]">
           <div class="flex justify-between items-center text-xs">
-            <span class="text-[11px] font-bold text-gray-700 flex items-center gap-1">
-              <i class="fa-solid fa-gauge-high text-indigo-500 text-[10px]"></i>
-              소재 환산 지표
-            </span>
+            <div class="flex items-center gap-1.5 relative">
+              <span class="text-[11px] font-bold text-gray-800 flex items-center gap-1">
+                <i class="fa-solid fa-gauge-high text-emerald-600 text-[10px]"></i>
+                <span>소재 환산 지표</span>
+              </span>
+              <div class="relative inline-block">
+                <button type="button" 
+                        onclick="event.stopPropagation(); window.toggleScoreTooltip(this, event);" 
+                        class="score-tooltip-btn w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-900 text-[9px] font-black flex items-center justify-center transition-colors cursor-pointer border border-gray-300"
+                        title="소재 환산 점수 안내">
+                  ?
+                </button>
+                <!-- Tooltip Popover (PC hover & mobile click) -->
+                <div class="score-tooltip-popover hidden absolute left-0 bottom-full mb-1.5 w-60 p-2.5 bg-gray-900 text-white rounded-xl shadow-xl text-[10px] leading-relaxed z-40 select-none">
+                  <div class="font-bold text-emerald-400 mb-0.5 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-info text-[9px]"></i>
+                    <span>소재 환산 점수란?</span>
+                  </div>
+                  <p class="text-gray-300">공식몰 케어라벨 혼용률(%)을 바탕으로 천연·기능성 원단 비중을 100점 만점으로 환산한 참고 지표입니다.</p>
+                  <p class="text-[9px] text-gray-400 mt-1 border-t border-gray-700 pt-1">실제 직조감 및 상세 스펙은 브랜드 공식몰에서 확인해 주세요.</p>
+                </div>
+              </div>
+            </div>
             <div class="flex items-center gap-1">
-              <span class="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">공식 표기 기준 · 확인일: ${escapeHTML(p.checkedDate || '2026-11-21')}</span>
-              <span class="text-sm font-black ${scoreColor}">${scoreVal}<span class="text-[10px] text-gray-400 font-normal">/100점</span></span>
+              <span class="text-[9px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200/80 font-medium">공식 표기 기준 · 확인일: ${escapeHTML(p.checkedDate || '2026-11-21')}</span>
+              <span class="text-xs sm:text-sm font-black tabular-nums ${scoreColor}">${scoreVal}<span class="text-[10px] text-gray-400 font-normal">/100점</span></span>
             </div>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+          <div class="w-full bg-gray-200/80 rounded-full h-2 overflow-hidden shadow-inner">
             <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${scoreVal}%"></div>
           </div>
-          <div class="pt-1 space-y-1.5">
-            <div class="flex flex-wrap gap-1.5">${componentChips}</div>
-            <p class="text-[11px] text-gray-600 leading-snug break-words break-keep line-clamp-2">
-              <span class="font-semibold text-gray-700">공식 표기 케어라벨:</span> ${safeFabric}
+          <div class="pt-0.5 space-y-1">
+            <div class="flex flex-wrap gap-1">${componentChips}</div>
+            <p class="text-[10px] text-gray-500 leading-snug break-words break-keep line-clamp-2">
+              <span class="font-bold text-gray-600">공식 표기 케어라벨:</span> ${safeFabric}
             </p>
           </div>
         </div>
       </div>
 
       <!-- 하단 버튼: [브랜드 공식몰에서 확인하기 ↗] + [맞대결 담기] -->
-      <div class="flex items-center gap-2 pt-1 mt-auto">
+      <div class="flex items-center gap-2 pt-1.5 mt-auto">
         <button onclick="handleOutboundClick('${jsBrand}','${jsName}','${jsLink}')"
-           class="flex-1 py-2 px-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1 active:scale-95 text-center cursor-pointer min-w-0" title="해당 브랜드 공식 온라인몰 또는 판매처로 이동합니다.">
+           class="flex-1 py-2 px-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1 active:scale-95 text-center cursor-pointer min-w-0" title="해당 브랜드 공식 온라인몰 또는 판매처로 이동합니다.">
           <span class="truncate">브랜드 공식몰에서 확인하기</span>
-          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500 shrink-0"></i>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-400 shrink-0"></i>
         </button>
 
         <button onclick="toggleCompare(${p.id})" 
-                class="py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1 whitespace-nowrap active:scale-95 shadow-xs cursor-pointer shrink-0 ${
+                class="py-2 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 whitespace-nowrap active:scale-95 shadow-xs cursor-pointer shrink-0 ${
                   isSelected 
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
-                    : 'bg-gray-900 text-white hover:bg-black'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+                    : 'bg-[#111827] text-white hover:bg-black'
                 }">
           <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-plus'} text-[10px]"></i>
           <span>${isSelected ? '선택 취소' : '맞대결 담기'}</span>
@@ -1514,7 +1532,7 @@ window.resetFilters = function() {
 
   document.querySelectorAll(".brand-btn").forEach(b => {
     b.className = (b.dataset?.brand === "ALL")
-      ? "brand-btn active whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white transition-all shadow-sm"
+      ? "brand-btn active whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold bg-[#111827] text-white transition-all shadow-xs"
       : "brand-btn whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:bg-gray-100 transition-all";
   });
 
@@ -1655,12 +1673,12 @@ function generateCompareHTML() {
     const itemMiniBar = getFabricMiniProgressBar(item.analysis);
 
     return `
-      <div class="bg-indigo-50/90 border border-indigo-100 rounded-xl p-3 text-indigo-900 text-xs flex items-center gap-2">
-        <i class="fa-solid fa-circle-question text-indigo-600 text-sm shrink-0"></i>
+      <div class="bg-gray-100/90 border border-gray-200 rounded-xl p-3 text-gray-800 text-xs flex items-center gap-2">
+        <i class="fa-solid fa-circle-question text-emerald-600 text-sm shrink-0"></i>
         <span>상대할 <strong>두 번째 상품</strong>을 목록에서 추가로 선택해주세요!</span>
       </div>
 
-      <div class="border border-indigo-200 rounded-2xl p-3 sm:p-4 bg-white shadow-xs space-y-3 mt-3">
+      <div class="border border-gray-200 rounded-2xl p-3 sm:p-4 bg-white shadow-2xs space-y-3 mt-3">
         <!-- 1개 선택 시 스튜디오 비주얼 쇼케이스 썸네일 -->
         <div class="relative w-full rounded-xl overflow-hidden mb-2 bg-gradient-to-br ${itemBrandStyle.bgGradient} border border-gray-100 shadow-2xs group">
           <div class="absolute top-2 left-2 right-2 flex items-center justify-between z-10 pointer-events-none">
@@ -1668,7 +1686,7 @@ function generateCompareHTML() {
               <span class="w-1.5 h-1.5 rounded-full border border-white/40" style="background-color: ${itemBrandStyle.accent}"></span>
               <span>${safeBrand}</span>
             </span>
-            <span class="text-[9px] font-bold text-gray-500 bg-white/95 px-2 py-0.5 rounded-full border border-gray-200/70 shadow-2xs">Otlabel Studio Visual</span>
+            <span class="text-[9px] font-bold text-gray-500 bg-white/95 px-2 py-0.5 rounded-full border border-gray-200/70 shadow-2xs">CARE LABEL · SPEC</span>
           </div>
           <div class="w-full h-32 sm:h-36 flex items-center justify-center pt-5 pb-1 px-3">
             ${itemVisualSVG}
@@ -1685,27 +1703,27 @@ function generateCompareHTML() {
         </div>
 
         <div class="flex justify-between items-start gap-2">
-          <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[120px]">${safeBrand}</span>
-          <span class="text-xs font-black text-gray-900 whitespace-nowrap">${(item.price || 0) > 0 ? item.price.toLocaleString() + '원' : '가격 미정'}</span>
+          <span class="text-[10px] font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 truncate max-w-[120px]">${safeBrand}</span>
+          <span class="text-xs font-black text-gray-900 whitespace-nowrap tabular-nums">${(item.price || 0) > 0 ? item.price.toLocaleString() + '원' : '가격 미정'}</span>
         </div>
         <h4 class="text-xs font-bold text-gray-900 break-keep">${safeName}</h4>
         
-        <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-100 space-y-1.5">
+        <div class="care-label-box p-2.5 rounded-xl border border-dashed border-gray-200 space-y-1.5 bg-[#FAFAF9]">
           <div class="flex justify-between text-[11px]">
-            <span class="text-gray-500 font-semibold">소재 퀄리티 점수</span>
+            <span class="text-gray-600 font-semibold">소재 퀄리티 점수</span>
             <div class="flex items-center gap-1.5">
-              <span class="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded font-medium">공식 표기 기준 · 확인일: ${escapeHTML(item.checkedDate || '2026-11-21')}</span>
-              <span class="font-black text-indigo-600">${item.score || 0}점</span>
+              <span class="text-[9px] text-gray-500 bg-white px-1.5 py-0.5 rounded border border-gray-200 font-medium">공식 표기 기준 · 확인일: ${escapeHTML(item.checkedDate || '2026-11-21')}</span>
+              <span class="font-black text-emerald-700 tabular-nums">${item.score || 0}점</span>
             </div>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
-            <div class="bg-indigo-600 h-2 rounded-full" style="width: ${item.score || 0}%"></div>
+            <div class="bg-emerald-600 h-2 rounded-full" style="width: ${item.score || 0}%"></div>
           </div>
           <p class="text-[11px] text-gray-700 pt-1 font-medium break-words break-keep">${safeFabric}</p>
         </div>
 
         <button onclick="handleOutboundClick('${jsBrand}','${jsName}','${jsLink}')"
-           class="w-full py-2 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
+           class="w-full py-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs">
           <span class="truncate">브랜드 공식몰에서 확인하기</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-gray-500 shrink-0"></i>
         </button>
@@ -1737,18 +1755,27 @@ function generateCompareHTML() {
     const bNat = b.analysis?.naturalPercent || 0;
     const natDiff = Math.abs(Math.round((aNat - bNat) * 10) / 10);
     const aNatBadge = aNat > bNat
-      ? `<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 ${natDiff}%p 높음</span>`
+      ? `<span class="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.5 rounded-full shrink-0 tabular-nums">천연섬유 분류 비중 ${natDiff}%p 높음</span>`
       : (aNat === bNat ? `<span class="text-[9px] font-bold bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 동일</span>` : '');
     const bNatBadge = bNat > aNat
-      ? `<span class="text-[9px] font-extrabold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 ${natDiff}%p 높음</span>`
+      ? `<span class="text-[9px] font-extrabold bg-emerald-600 text-white px-1.5 py-0.5 rounded-full shrink-0 tabular-nums">천연섬유 분류 비중 ${natDiff}%p 높음</span>`
       : (aNat === bNat ? `<span class="text-[9px] font-bold bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-full shrink-0">천연섬유 분류 비중 동일</span>` : '');
 
+    const NATURAL_FIBER_REGEX = /면|코튼|cotton|울|모|양모|메리노|merino|lambswool|wool|캐시미어|cashmere|알파카|alpaca|야크|yak|모헤어|mohair|린넨|리넨|linen|마|마혼방|견|실크|silk|다운|down|솜털|깃털|구스|덕/i;
     const aBadges = (a.analysis?.components?.length > 0)
-      ? a.analysis.components.slice(0, 3).map(c => `<span class="badge-ratio text-[10px] font-bold bg-indigo-50 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200">${escapeHTML(c.name)} ${c.percent}%</span>`).join(" ")
+      ? a.analysis.components.slice(0, 3).map(c => {
+          const isNat = NATURAL_FIBER_REGEX.test(c.name) || NATURAL_FIBER_REGEX.test(c.rawName || "");
+          const cls = isNat ? "badge-natural" : "badge-synthetic";
+          return `<span class="badge-ratio ${cls} text-[10px] px-1.5 py-0.5 rounded shadow-2xs tabular-nums">${escapeHTML(c.name)} ${c.percent}%</span>`;
+        }).join(" ")
       : `<span class="text-[10px] text-gray-500">${escapeHTML(a.analysis?.keySummary || "라벨 확인 권장")}</span>`;
 
     const bBadges = (b.analysis?.components?.length > 0)
-      ? b.analysis.components.slice(0, 3).map(c => `<span class="badge-ratio text-[10px] font-bold bg-indigo-50 text-indigo-800 px-1.5 py-0.5 rounded border border-indigo-200">${escapeHTML(c.name)} ${c.percent}%</span>`).join(" ")
+      ? b.analysis.components.slice(0, 3).map(c => {
+          const isNat = NATURAL_FIBER_REGEX.test(c.name) || NATURAL_FIBER_REGEX.test(c.rawName || "");
+          const cls = isNat ? "badge-natural" : "badge-synthetic";
+          return `<span class="badge-ratio ${cls} text-[10px] px-1.5 py-0.5 rounded shadow-2xs tabular-nums">${escapeHTML(c.name)} ${c.percent}%</span>`;
+        }).join(" ")
       : `<span class="text-[10px] text-gray-500">${escapeHTML(b.analysis?.keySummary || "라벨 확인 권장")}</span>`;
 
     const aSafeBrand = escapeHTML(a.brand || "기타");
@@ -1779,25 +1806,25 @@ function generateCompareHTML() {
     if (a.price === b.price) {
       priceComparisonBadge = `<span class="text-[10px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">공식 표시 정가 동일</span>`;
     } else if (cheaper) {
-      priceComparisonBadge = `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full inline-block leading-snug">
+      priceComparisonBadge = `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full inline-block leading-snug tabular-nums">
         ${escapeHTML(cheaper.brand)} 공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음
       </span>`;
     }
 
     return `
       <!-- 가격 차이 하이라이트 배너 -->
-      <div class="p-2.5 rounded-xl bg-gradient-to-r from-indigo-50 via-purple-50 to-emerald-50 border border-indigo-100 flex items-center justify-between gap-1">
+      <div class="p-2.5 rounded-xl bg-white border border-gray-200/90 shadow-2xs flex items-center justify-between gap-1">
         <div class="text-[11px] font-bold text-gray-800 flex items-center gap-1.5 shrink-0">
           <i class="fa-solid fa-coins text-amber-500"></i>
           <span>공식 표시 정가 비교:</span>
         </div>
-        <div class="text-right min-w-0">${priceComparisonBadge}</div>
+        <div class="text-right min-w-0 tabular-nums">${priceComparisonBadge}</div>
       </div>
 
       <!-- 1:1 대결 상단 카드 (2열 - 모바일 360px 및 PC Split-View 대응) -->
       <div class="grid grid-cols-2 gap-2 sm:gap-3 text-center">
         <!-- A 상품 -->
-        <div class="bg-white p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between min-w-0 ${betterFabric?.id === a.id ? 'border-indigo-600 ring-2 ring-indigo-100 shadow-sm' : 'border-gray-200'}">
+        <div class="bg-white p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between min-w-0 ${betterFabric?.id === a.id ? 'border-emerald-600 ring-2 ring-emerald-100 shadow-sm' : 'border-gray-200'}">
           <!-- A Visual Studio Artwork Showcase -->
           <div class="relative w-full rounded-xl overflow-hidden mb-2 bg-gradient-to-br ${aBrandStyle.bgGradient} border border-gray-100 shadow-2xs">
             <div class="absolute top-1.5 left-1.5 flex items-center gap-1 z-10 pointer-events-none">
@@ -1822,23 +1849,23 @@ function generateCompareHTML() {
 
           <div class="min-w-0">
             <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
-              <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[76px] sm:max-w-[100px]">${aSafeBrand}</span>
+              <span class="text-[10px] font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 truncate max-w-[76px] sm:max-w-[100px]">${aSafeBrand}</span>
               ${aNatBadge}
             </div>
             <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2 text-left leading-tight break-words break-keep">${aSafeName}</h4>
-            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${(a.price || 0) > 0 ? a.price.toLocaleString() + '원' : '가격 미정'}</p>
-            ${cheaper?.id === a.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음)</p>` : ''}
+            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap tabular-nums">${(a.price || 0) > 0 ? a.price.toLocaleString() + '원' : '가격 미정'}</p>
+            ${cheaper?.id === a.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate tabular-nums">(공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음)</p>` : ''}
             <div class="text-[9px] text-gray-500 font-medium text-left mt-0.5 truncate">공식 표기 기준 · 확인일: ${escapeHTML(a.checkedDate || '2026-11-21')}</div>
           </div>
           <button onclick="handleOutboundClick('${aJsBrand}','${aJsName}','${aJsLink}')"
-             class="mt-2.5 w-full py-1.5 px-1 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer min-w-0">
+             class="mt-2.5 w-full py-1.5 px-1 bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer min-w-0 shadow-2xs">
             <span class="truncate">브랜드 공식몰에서 확인하기</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-500 shrink-0"></i>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-400 shrink-0"></i>
           </button>
         </div>
         
         <!-- B 상품 -->
-        <div class="bg-white p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between min-w-0 ${betterFabric?.id === b.id ? 'border-indigo-600 ring-2 ring-indigo-100 shadow-sm' : 'border-gray-200'}">
+        <div class="bg-white p-2.5 sm:p-3 rounded-2xl border flex flex-col justify-between min-w-0 ${betterFabric?.id === b.id ? 'border-emerald-600 ring-2 ring-emerald-100 shadow-sm' : 'border-gray-200'}">
           <!-- B Visual Studio Artwork Showcase -->
           <div class="relative w-full rounded-xl overflow-hidden mb-2 bg-gradient-to-br ${bBrandStyle.bgGradient} border border-gray-100 shadow-2xs">
             <div class="absolute top-1.5 left-1.5 flex items-center gap-1 z-10 pointer-events-none">
@@ -1863,18 +1890,18 @@ function generateCompareHTML() {
 
           <div class="min-w-0">
             <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
-              <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 truncate max-w-[76px] sm:max-w-[100px]">${bSafeBrand}</span>
+              <span class="text-[10px] font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 truncate max-w-[76px] sm:max-w-[100px]">${bSafeBrand}</span>
               ${bNatBadge}
             </div>
             <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2 text-left leading-tight break-words break-keep">${bSafeName}</h4>
-            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap">${(b.price || 0) > 0 ? b.price.toLocaleString() + '원' : '가격 미정'}</p>
-            ${cheaper?.id === b.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate">(공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음)</p>` : ''}
+            <p class="text-xs sm:text-sm font-black text-gray-900 mt-1 text-left whitespace-nowrap tabular-nums">${(b.price || 0) > 0 ? b.price.toLocaleString() + '원' : '가격 미정'}</p>
+            ${cheaper?.id === b.id && priceDiff > 0 ? `<p class="text-[10px] font-bold text-emerald-700 text-left truncate tabular-nums">(공식 표시 정가 ${priceDiff.toLocaleString()}원 낮음)</p>` : ''}
             <div class="text-[9px] text-gray-500 font-medium text-left mt-0.5 truncate">공식 표기 기준 · 확인일: ${escapeHTML(b.checkedDate || '2026-11-21')}</div>
           </div>
           <button onclick="handleOutboundClick('${bJsBrand}','${bJsName}','${bJsLink}')"
-             class="mt-2.5 w-full py-1.5 px-1 bg-gray-50 hover:bg-gray-100 border border-gray-300 text-gray-800 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer min-w-0">
+             class="mt-2.5 w-full py-1.5 px-1 bg-white hover:bg-gray-50 border border-gray-300 text-gray-800 rounded-lg text-[10px] font-bold transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer min-w-0 shadow-2xs">
             <span class="truncate">브랜드 공식몰에서 확인하기</span>
-            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-500 shrink-0"></i>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-gray-400 shrink-0"></i>
           </button>
         </div>
       </div>
@@ -1885,65 +1912,65 @@ function generateCompareHTML() {
       </p>
 
       <!-- 정밀 비교 바 및 수치 대조 -->
-      <div class="bg-gray-50 rounded-2xl p-3 sm:p-3.5 space-y-3.5 border border-gray-200">
+      <div class="bg-white rounded-2xl p-3 sm:p-3.5 space-y-3.5 border border-gray-200 shadow-2xs">
         <!-- 표시 소재 혼용률 비교 게이지 -->
         <div>
           <div class="flex justify-between items-center text-[11px] font-bold text-gray-700 mb-1.5 gap-1">
-            <span class="truncate max-w-[90px] sm:max-w-[120px] ${betterFabric?.id === a.id ? 'text-indigo-600 font-black' : ''}">${aSafeBrand} (${a.score || 0}점)</span>
+            <span class="truncate max-w-[90px] sm:max-w-[120px] tabular-nums ${betterFabric?.id === a.id ? 'text-emerald-700 font-black' : ''}">${aSafeBrand} (${a.score || 0}점)</span>
             <span class="text-[10px] text-gray-500 font-semibold shrink-0">표시 소재 혼용률 비교 (공식 표기 기준)</span>
-            <span class="truncate max-w-[90px] sm:max-w-[120px] text-right ${betterFabric?.id === b.id ? 'text-indigo-600 font-black' : ''}">(${b.score || 0}점) ${bSafeBrand}</span>
+            <span class="truncate max-w-[90px] sm:max-w-[120px] text-right tabular-nums ${betterFabric?.id === b.id ? 'text-emerald-700 font-black' : ''}">(${b.score || 0}점) ${bSafeBrand}</span>
           </div>
           <div class="grid grid-cols-2 gap-1 h-3">
             <div class="bg-gray-200 rounded-l-full overflow-hidden flex justify-end">
-              <div class="bg-indigo-600 h-full rounded-l-full transition-all duration-500" style="width: ${a.score || 0}%"></div>
+              <div class="bg-emerald-600 h-full rounded-l-full transition-all duration-500" style="width: ${a.score || 0}%"></div>
             </div>
             <div class="bg-gray-200 rounded-r-full overflow-hidden flex justify-start">
-              <div class="bg-indigo-600 h-full rounded-r-full transition-all duration-500" style="width: ${b.score || 0}%"></div>
+              <div class="bg-emerald-600 h-full rounded-r-full transition-all duration-500" style="width: ${b.score || 0}%"></div>
             </div>
           </div>
         </div>
 
         <!-- 핵심 혼용률 수치 강조 배지 -->
-        <div class="pt-2 border-t border-gray-200">
+        <div class="pt-2 border-t border-gray-200/80">
           <div class="text-[10px] font-bold text-gray-500 text-center mb-1.5">핵심 섬유 비율 (Top 3)</div>
           <div class="grid grid-cols-2 gap-2">
-            <div class="bg-white p-2 rounded-xl border border-gray-200 flex flex-wrap gap-1 justify-center min-w-0">${aBadges}</div>
-            <div class="bg-white p-2 rounded-xl border border-gray-200 flex flex-wrap gap-1 justify-center min-w-0">${bBadges}</div>
+            <div class="bg-[#FAFAF9] p-2 rounded-xl border border-gray-200 flex flex-wrap gap-1 justify-center min-w-0">${aBadges}</div>
+            <div class="bg-[#FAFAF9] p-2 rounded-xl border border-gray-200 flex flex-wrap gap-1 justify-center min-w-0">${bBadges}</div>
           </div>
         </div>
 
         <!-- 케어라벨 원문 대조 -->
-        <div class="pt-2 border-t border-gray-200">
+        <div class="pt-2 border-t border-gray-200/80">
           <div class="text-[10px] font-bold text-gray-500 text-center mb-1.5">케어라벨 공식 표기 원문</div>
           <div class="grid grid-cols-2 gap-2 text-[10px] sm:text-[11px]">
-            <div class="bg-white p-2 sm:p-2.5 rounded-xl border border-gray-200 text-gray-800 font-medium break-words break-keep leading-tight overflow-hidden">${aSafeFabric}</div>
-            <div class="bg-white p-2 sm:p-2.5 rounded-xl border border-gray-200 text-gray-800 font-medium break-words break-keep leading-tight overflow-hidden">${bSafeFabric}</div>
+            <div class="bg-[#FAFAF9] p-2 sm:p-2.5 rounded-xl border border-gray-200 text-gray-800 font-medium break-words break-keep leading-tight overflow-hidden">${aSafeFabric}</div>
+            <div class="bg-[#FAFAF9] p-2 sm:p-2.5 rounded-xl border border-gray-200 text-gray-800 font-medium break-words break-keep leading-tight overflow-hidden">${bSafeFabric}</div>
           </div>
         </div>
 
         <!-- 가성비 지수 -->
-        <div class="pt-2 border-t border-gray-200 flex justify-around text-center">
+        <div class="pt-2 border-t border-gray-200/80 flex justify-around text-center">
           <div>
             <span class="text-[10px] text-gray-400 block font-medium">가성비 환산 지수 (참고용)</span>
-            <span class="text-xs font-black ${betterCostPerf?.id === a.id ? 'text-indigo-600' : 'text-gray-900'}">${a.costPerf || 0} pt</span>
+            <span class="text-xs font-black tabular-nums ${betterCostPerf?.id === a.id ? 'text-emerald-700' : 'text-gray-900'}">${a.costPerf || 0} pt</span>
           </div>
           <div class="w-px bg-gray-200 h-6"></div>
           <div>
             <span class="text-[10px] text-gray-400 block font-medium">가성비 환산 지수 (참고용)</span>
-            <span class="text-xs font-black ${betterCostPerf?.id === b.id ? 'text-indigo-600' : 'text-gray-900'}">${b.costPerf || 0} pt</span>
+            <span class="text-xs font-black tabular-nums ${betterCostPerf?.id === b.id ? 'text-emerald-700' : 'text-gray-900'}">${b.costPerf || 0} pt</span>
           </div>
         </div>
 
         <!-- 세탁 관리 팁 -->
-        <div class="pt-2 border-t border-gray-200">
+        <div class="pt-2 border-t border-gray-200/80">
           <div class="text-[10px] font-bold text-gray-500 text-center mb-1.5">스마트 세탁 & 관리 팁 대조</div>
           <div class="grid grid-cols-2 gap-2 text-[10px] text-gray-600">
-            <div class="bg-white p-2 rounded-xl border border-gray-200 min-w-0">
+            <div class="bg-[#FAFAF9] p-2 rounded-xl border border-gray-200 min-w-0">
               <ul class="list-disc pl-3 space-y-0.5 break-words break-keep">
                 ${a.analysis?.careTips?.slice(0, 2).map(tip => `<li>${escapeHTML(tip)}</li>`).join("") || '<li>표준 세탁 권장</li>'}
               </ul>
             </div>
-            <div class="bg-white p-2 rounded-xl border border-gray-200 min-w-0">
+            <div class="bg-[#FAFAF9] p-2 rounded-xl border border-gray-200 min-w-0">
               <ul class="list-disc pl-3 space-y-0.5 break-words break-keep">
                 ${b.analysis?.careTips?.slice(0, 2).map(tip => `<li>${escapeHTML(tip)}</li>`).join("") || '<li>표준 세탁 권장</li>'}
               </ul>
@@ -1953,27 +1980,27 @@ function generateCompareHTML() {
       </div>
 
       <!-- 비교 결과 요약 (공식 온라인몰 공시 기준) -->
-      <div class="bg-indigo-50/80 border border-indigo-100 rounded-2xl p-3 sm:p-3.5 text-xs text-indigo-950 space-y-2.5 shadow-xs">
-        <div class="font-extrabold flex items-center justify-between text-indigo-800">
+      <div class="bg-white border border-gray-200 rounded-2xl p-3 sm:p-3.5 text-xs text-gray-800 space-y-2.5 shadow-2xs">
+        <div class="font-extrabold flex items-center justify-between text-gray-900">
           <span class="flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-check text-indigo-600"></i>
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
             <span>비교 결과 요약</span>
           </span>
-          <span class="text-[9px] font-semibold text-indigo-600 bg-white/90 px-2 py-0.5 rounded-full border border-indigo-200">공식몰 공시 기준</span>
+          <span class="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">공식몰 공시 기준</span>
         </div>
 
         <!-- 천연/합성섬유 분류 기준 안내 문구 -->
-        <div class="p-2.5 bg-white/95 rounded-xl border border-indigo-100 text-[10px] text-gray-600 leading-normal">
-          <span class="font-bold text-gray-700"><i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i>분류 기준:</span> 면·울·캐시미어·린넨·마·견(실크)은 천연섬유로, 폴리에스터·나일론·아크릴·스판덱스·레이온·모달·텐셀 등은 합성·재생섬유로 분류하여 공시된 혼용률 수치를 합산합니다.
+        <div class="p-2.5 bg-[#FAFAF9] rounded-xl border border-gray-200 text-[10px] text-gray-600 leading-normal">
+          <span class="font-bold text-gray-800"><i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>분류 기준:</span> 면·울·캐시미어·린넨·마·견(실크)은 천연섬유로, 폴리에스터·나일론·아크릴·스판덱스·레이온·모달·텐셀 등은 합성·재생섬유로 분류하여 공시된 혼용률 수치를 합산합니다.
         </div>
 
         <div class="text-[11px] leading-relaxed space-y-1.5 break-keep text-gray-700">
-          <p>• <strong>표시 소재 혼용률 비교:</strong> ${aNat !== bNat ? `<strong>${aNat > bNat ? escapeHTML(a.brand) : escapeHTML(b.brand)}</strong>이(가) 천연섬유 분류 비중에서 <strong>${natDiff}%p 높게</strong> 산출되었습니다. (${a.brand} ${aNat}% vs ${b.brand} ${bNat}%)` : `두 제품의 천연섬유 분류 비중이 동일합니다. (${a.brand} ${aNat}% vs ${b.brand} ${bNat}%)`}</p>
-          <p>• <strong>공식 표시 정가 비교:</strong> ${cheaper && priceDiff > 0 ? `공식 온라인몰 표시 정가는 <strong>${escapeHTML(cheaper.brand)}</strong>이(가) <strong>${priceDiff.toLocaleString()}원 낮습니다</strong>. <span class="text-[10px] text-gray-500">(할인 쿠폰·프로모션에 따라 실구매가는 상이할 수 있습니다.)</span>` : '두 제품의 공식 온라인몰 표시 정가가 동일합니다.'}</p>
+          <p>• <strong>표시 소재 혼용률 비교:</strong> ${aNat !== bNat ? `<strong>${aNat > bNat ? escapeHTML(a.brand) : escapeHTML(b.brand)}</strong>이(가) 천연섬유 분류 비중에서 <strong class="tabular-nums">${natDiff}%p 높게</strong> 산출되었습니다. (<span class="tabular-nums">${a.brand} ${aNat}% vs ${b.brand} ${bNat}%</span>)` : `두 제품의 천연섬유 분류 비중이 동일합니다. (<span class="tabular-nums">${a.brand} ${aNat}% vs ${b.brand} ${bNat}%</span>)`}</p>
+          <p>• <strong>공식 표시 정가 비교:</strong> ${cheaper && priceDiff > 0 ? `공식 온라인몰 표시 정가는 <strong>${escapeHTML(cheaper.brand)}</strong>이(가) <strong class="tabular-nums">${priceDiff.toLocaleString()}원 낮습니다</strong>. <span class="text-[10px] text-gray-500">(할인 쿠폰·프로모션에 따라 실구매가는 상이할 수 있습니다.)</span>` : '두 제품의 공식 온라인몰 표시 정가가 동일합니다.'}</p>
           <p>• <strong>가성비 환산 지수:</strong> ${betterCostPerf ? `정가 대비 섬유 점수 비례 지수는 <strong>${escapeHTML(betterCostPerf.brand)}</strong>이(가) 더 높게 산출됩니다.` : '정가 대비 섬유 비례 지수가 유사합니다.'} <span class="text-[10px] text-gray-500">(원단 밀도, 편직 방식 등은 반영되지 않은 단순 혼용률/정가 기준 수치입니다.)</span></p>
         </div>
-        <div class="pt-2 border-t border-indigo-100/80 text-[10px] text-gray-500 leading-normal flex items-start gap-1">
-          <i class="fa-solid fa-circle-info text-[9px] text-indigo-500 mt-0.5 shrink-0"></i>
+        <div class="pt-2 border-t border-gray-200 text-[10px] text-gray-500 leading-normal flex items-start gap-1">
+          <i class="fa-solid fa-circle-info text-[9px] text-emerald-600 mt-0.5 shrink-0"></i>
           <span>본 비교는 각 브랜드 공식 온라인몰에 공시된 케어라벨 혼용률 및 정가 기준의 기계적 분석 결과이며, 상품의 품질 전반에 대한 우열 단정이 아닙니다. 최종 구매 전 해당 제조사/판매사의 최신 상세 정보를 확인하시기 바랍니다.</span>
         </div>
       </div>
@@ -2187,7 +2214,7 @@ function setupEventListeners() {
       });
       const target = e.currentTarget;
       if (target) {
-        target.className = "brand-btn active whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-600 text-white transition-all shadow-sm";
+        target.className = "brand-btn active whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-bold bg-[#111827] text-white transition-all shadow-sm";
         selectedBrand = target.dataset?.brand || "ALL";
       }
       renderProductCards();
@@ -2224,11 +2251,48 @@ function setupEventListeners() {
     });
   });
 
+  // 소재 환산 점수 안내 아코디언 토글 이벤트
+  const toggleScoreGuideBtn = document.getElementById("toggle-score-guide-btn");
+  const scoreGuideDetail = document.getElementById("score-guide-detail");
+  const scoreGuideArrow = document.getElementById("score-guide-arrow");
+
+  if (toggleScoreGuideBtn && scoreGuideDetail) {
+    toggleScoreGuideBtn.addEventListener("click", () => {
+      const isHidden = scoreGuideDetail.classList.contains("hidden");
+      if (isHidden) {
+        scoreGuideDetail.classList.remove("hidden");
+        if (scoreGuideArrow) scoreGuideArrow.classList.add("rotate-180");
+      } else {
+        scoreGuideDetail.classList.add("hidden");
+        if (scoreGuideArrow) scoreGuideArrow.classList.remove("rotate-180");
+      }
+    });
+  }
+
   setupAnalyzerEvents();
 }
 
 // =============================================================
-// 15. 이용약관 및 개인정보처리방침 모달 제어
+// 15. 소재 환산 점수 툴팁 팝오버 제어 (카드 내 ? 아이콘)
+// =============================================================
+window.toggleScoreTooltip = function(btn, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const popover = btn.parentElement ? btn.parentElement.querySelector(".score-tooltip-popover") : null;
+  if (!popover) return;
+  const isHidden = popover.classList.contains("hidden");
+  document.querySelectorAll(".score-tooltip-popover").forEach(p => p.classList.add("hidden"));
+  if (isHidden) {
+    popover.classList.remove("hidden");
+  } else {
+    popover.classList.add("hidden");
+  }
+};
+
+// =============================================================
+// 16. 이용약관 및 개인정보처리방침 모달 제어
 // =============================================================
 window.openTermsModal = function() {
   const modal = document.getElementById("terms-modal");
@@ -2251,12 +2315,19 @@ window.closePrivacyModal = function() {
 };
 
 // =============================================================
-// 16. 앱 시작
+// 17. 앱 시작
 // =============================================================
 document.addEventListener("DOMContentLoaded", () => {
   setupResponsivePCView();
   window.addEventListener("resize", setupResponsivePCView);
   setupEventListeners();
+
+  // 툴팁 외부 영역 클릭 시 닫기
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".score-tooltip-btn") && !e.target.closest(".score-tooltip-popover")) {
+      document.querySelectorAll(".score-tooltip-popover").forEach(p => p.classList.add("hidden"));
+    }
+  });
 
   document.getElementById("terms-modal")?.addEventListener("click", (e) => {
     if (e.target.id === "terms-modal") window.closeTermsModal();

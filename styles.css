@@ -1,8 +1,10 @@
 @charset "UTF-8";
 
 /* ==========================================================================
-   Otlabel (옷라벨) Main Stylesheet - UI/UX Enhanced
+   Otlabel (옷라벨) Main Stylesheet - Fashion Editorial Lookbook & Care Label
    ========================================================================== */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
 /* 1. 기본 타이포그래피 & 렌더링 최적화 */
 html, body {
@@ -11,10 +13,68 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  background-color: #F9F9F8 !important;
+  color: #111827;
+}
+
+/* 숫자/비율/가격 tabular-nums (고정폭 숫자 정렬) */
+.tabular-nums,
+.num-val,
+[data-num],
+.price-val,
+.score-val,
+.percent-val,
+.badge-ratio {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
+
+/* 패션 에디토리얼 룩북 카드 & 미니멀 케어라벨 스타일 */
+.product-editorial-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 18px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.product-editorial-card:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+  transform: translateY(-2px);
+}
+
+/* 실제 의류 안쪽 세탁 라벨(Care Label) 질감 박스 */
+.care-label-box {
+  background-color: #FAFAFA;
+  border: 1px dashed #E5E7EB;
+  border-radius: 14px;
+}
+
+/* 천연섬유 비중 강조 (세이지 에메랄드 그린) */
+.badge-natural {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  font-weight: 700;
+}
+
+/* 합성·재생섬유 강조 (슬레이트 그레이) */
+.badge-synthetic {
+  background-color: #F8FAFC;
+  color: #334155;
+  border: 1px solid #CBD5E1;
+  font-weight: 600;
+}
+
+/* 툴팁 팝오버 그림자 */
+.score-tooltip-popover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
 }
 
 /* 2. 스크롤바 숨김 유틸리티 & 터치 가로 스크롤 최적화 */
@@ -70,15 +130,15 @@ body {
 }
 
 .brand-btn.active {
-  background-color: #4f46e5 !important;
+  background-color: #111827 !important;
   color: #ffffff !important;
-  border-color: #4338ca !important;
+  border-color: #111827 !important;
   font-weight: 700 !important;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(17, 24, 39, 0.25) !important;
 }
 
 .brand-btn:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #111827;
   outline-offset: 2px;
 }
 
